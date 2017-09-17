@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="./css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="./css/bootstrap-theme.min.css"/>
+        <script src="./js/bootstrap.min.js" ></script>
+        <script src="./js/vue.js"></script>
+    </head>
+
+    <body>
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <div class="navar-header">
+                    <a class="navbar-brand" href="#">Management furnir</a>
+                </div>
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="#">Mutare furnir</a></li>
+                    <li><a href="#">Rapoarte</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><div class="navar-header">
+                        <img src="images/logo1mic.png" class="navbar-brand" style="padding:0"/>
+                    </div></li>
+                  </ul>                  
+            </div>
+        </nav>
+        <div class="container-fluid">
+            <div id="pallet-transfer" class="col-xs-12" >
+                <pallet-transfer-wizard v-bind:steps="steps" ></pallet-transfer-wizard>                                            
+            </div>
+        </div>
+        <script type="text/x-template" id="pallet-transfer-wizard-template">
+            <div>                
+                <div class="pane" id="header" style="text-align:center">                
+                    <div><h1>{{step.prompt}}</h1></div>
+                    <input type="text" id="source" v-on:keyup.enter="confirmStep" v-model="input_value"/>                                             
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <palet-sursa v-bind:pallet="source_pallet" v-bind:scanneditem="scanneditem"></palet-sursa>
+                    </div>
+                    <div class="col-sm-6">
+                        <palet-dest v-bind:pallet="dest_pallet" v-bind:scanneditem="scanneditem"></palet-dest>
+                    </div>
+                </div>
+            </div>
+            
+        </script>
+
+        <script type="text/x-template" id="source-pallet-template">            
+            <div>
+                <div class="alert alert-info" style="font-size:20px">Palet sursa <span v-if="pallet!=null">{{pallet}}</span></div>
+                <div v-if="pallet!=null">
+                        
+                </div>
+            </div>
+        </script>
+
+        <script type="text/x-template" id="dest-pallet-template">            
+            <div>
+                <div class="alert alert-info"style="font-size:20px">Palet dest <span v-if="pallet!=null">{{pallet}}</span> </div>
+                <div v-if="pallet!=null">
+                    <div v-for="item in items">{{item}}</div>                    
+                </div>
+            </div>
+        </script>
+
+        <script>
+            Vue.component('palet-sursa',{
+                template: "#source-pallet-template",
+                props: ['pallet','scanneditem'],
+                created: function(){
+                    this.pallet = null;
+                    this.items = new Array();
+                },
+                watch:{
+                    pallet : function(val){
+                        //this.items = new Array();
+                    },
+                    scanneditem: function(val){
+                        //alert(val);
+                    }
+                }
+            });
+
+            Vue.component('palet-dest',{
+                template: "#dest-pallet-template",
+                props: ['pallet','scanneditem'],  
+                data: function(){
+                    return {items: new Array()};
+                },
+                created: function(){
+                    this.pallet = null;
+                    //this.items = new Array();
+                    this.items.push("muc");
+                },
+                watch:{
+                    pallet : function(val){
+                        console.log(this.items);
+                    },
+                    scanneditem: function(val){ 
+                        console.log(val);                           
+                        this.items.push(val);
+                        console.log(this.items);
+                    },
+                
+                },
+                methods: {
+                    /*showitems: function(){
+                        console.log(this.items);
+                    }*/
+                }            
+            });
+
+            Vue.component('pallet-transfer-wizard',{
+                template: "#pallet-transfer-wizard-template",
+                props:['steps','test','input_value','source_pallet','dest_pallet','scanneditem'],
+                methods: {
+                    confirmStep:function(){
+
+                        console.log("*********************");
+                        //if we do not have a new command, we perform our task
+                        if(!arrContains(Object.keys(this.steps),this.input_value)){
+                            if(!this.step.checkValidity(this.input_value)){
+                                alert("Valoare invalida");
+                                return;
+                            }
+                            this.step.perform({"parent":this,"input":this.input_value});
+                        }
+                        //if the value scanned is a command, then we start that command
+                        //if that command can follow the present commmand
+                        else{
+                            this.step = this.steps[this.input_value];                            
+                            this.step.perform(null);
+                        }
+                        this.input_value = "";
+                    },
+                    transfer: function(item){
+                        console.log("Am primit "+item);
+                        this.scanneditem = item;
+                    }
+                },                                
+                created: function(){                                        
+                    this.step = this.steps["palet sursa"];
+                    this.source_pallet = null;                    
+                    this.dest_pallet = null;
+                }
+            });
+            new Vue({
+                el: '#pallet-transfer',
+                data: {
+                    steps: {
+                        "palet nou":{
+                            prompt: null,
+                            type: "palet nou", 
+                            okMsg: "Palet nou creat", 
+                            cancelMsg: "Creare palet nou anulata", 
+                            followedBy: ["transf nou", "palet sursa", "palet dest"],
+                            checkValidity: function(value){
+                                return true;
+                            },
+                            perform: function(value){
+                                this.isOk = true;
+                            }
+                        },
+                        "transf nou":{
+                            prompt: null,
+                            type: "transf nou", 
+                            okMsg: "Transfer initializat", 
+                            cancelMsg: "Transfer anulat", 
+                            followedBy: ["palet nou"],
+                            checkValidity: function(value){
+                                return true;
+                            },
+                            perform: function(value){
+                                if(value){
+                                    console.log("transf nou: "+value);
+                                    value.parent.transfer(value.input);
+                                    //value.parent.scanneditem=value.input;
+                                }
+                            }
+                        },
+                        "palet sursa":{
+                            prompt: "Alege palet sursa",
+                            type: "palet sursa", 
+                            okMesaj: "Palet sursa ales", 
+                            cancelMsg: "Alegere palet sursa anulata",
+                            followedBy: ["palet nou", "palet dest"],
+                            checkValidity: function(value){
+                                return true;
+                            },
+                            perform: function(value){
+                                if(value){
+                                    value.parent.source_pallet = value.input;
+                                }
+                            }
+                        },
+                        "palet dest":{
+                            prompt: "Alege palet dest",
+                            type: "palet desti", 
+                            okMesaj: "Palet destinatie ales", 
+                            cancelMsg: "Alegere palet destinatie anulata",
+                            followedBy: ["palet nou","transf nou"],
+                            checkValidity: function(value){
+                                return true;
+                            },
+                            perform: function(value){
+                                if(value){
+                                    value.parent.dest_pallet = value.input;
+                                }
+                            }
+                        },
+                    },
+                    data:{
+                        inputValue: function(){
+                            return "";
+                        }                        
+                    }
+                    
+                }
+            });
+                
+            window.onload=onLoad;
+            function onLoad(){                
+
+            }
+
+            function arrContains(arr,value){
+                console.log(arr);
+                for(val in arr){
+                    if(arr[val]===value){
+                        return true;
+                    }
+                }
+                return false;
+            }
+        </script>
+    </body>
+
+</html>
