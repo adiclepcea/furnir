@@ -6,11 +6,25 @@ import (
 
 //Pallet is the structure used to store a Pallet in the database
 type Pallet struct{
-	ID int `json:"id"`
+	ID int64 `json:"id"`
 	Code string `json:"code"`
 }
 
-//New will create a new Pallet
-func (palet Pallet) New()(Pallet){	
-	return Pallet{ID:0,Code:""}
+//NewPallet will create a new Pallet
+func NewPallet()(*Pallet, error){	
+	db := InitDB()
+	defer db.Close()
+	if db==nil{
+		return nil, nil
+	}
+	res, err := db.Exec("Insert into pallets() values()")
+	if err!=nil {
+		return nil,err
+	}
+	id, err := res.LastInsertId()
+	if err!=nil {
+		return nil,err
+	}
+
+	return &Pallet{ID:id,Code:""},nil
 }

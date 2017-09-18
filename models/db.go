@@ -8,10 +8,8 @@ import
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var db *sql.DB
-
 //InitDB initializes the connection to the database
-func InitDB(){
+func InitDB()(*sql.DB){
 	//"user:pass@/db"
 	db, err := sql.Open("mysql", "furnir:Furnir123@tcp(127.0.0.1:13306)/furnir")
 	if err!=nil {
@@ -21,6 +19,6 @@ func InitDB(){
 	if err=db.Ping(); err!=nil{
 		log.Panic(err)
 	}
-
 	log.Println("Connected to DB")
+	return db
 }
