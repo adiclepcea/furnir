@@ -1,0 +1,15 @@
+{
+	"ImportPath": "github.com/adiclepcea/furnir",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/go-sql-driver/mysql",
+			"Comment": "v1.3-34-gbe22b30",
+			"Rev": "be22b3051b3467094e9908389d900e74f72cf08f"
+		}
+	]
+}
