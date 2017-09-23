@@ -37,10 +37,10 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-6">
-                        <palet-sursa v-bind:pallet="source_pallet" v-bind:scanneditem="scanneditem"></palet-sursa>
+                        <palet-sursa v-bind:pallet="source_pallet" v-bind:scanneditem="this.scanneditem"></palet-sursa>
                     </div>
                     <div class="col-sm-6">
-                        <palet-dest v-bind:pallet="dest_pallet" v-bind:scanneditem="scanneditem"></palet-dest>
+                        <palet-dest v-bind:pallet="dest_pallet" v-bind:scanneditem="this.scanneditem"></palet-dest>
                     </div>
                 </div>
             </div>
@@ -85,27 +85,32 @@
 
             Vue.component('palet-dest',{
                 template: "#dest-pallet-template",
-                props: ['pallet','scanneditem'],  
+                props: ['pallet','scanneditem','resetdest'],  
                 data: function(){
                     return {items: new Array()};
                 },
                 created: function(){
-                    this.pallet = null;
-                    //this.items = new Array();
-                    this.items.push("muc");
+                    this.initialize();
                 },
                 watch:{
                     pallet : function(val){
+                        this.initialize();
+                        //TODO add code to retrieve the items in this pallet
                         console.log(this.items);
                     },
                     scanneditem: function(val){ 
                         console.log(val);                           
                         this.items.push(val);
                         console.log(this.items);
-                    },
+                    }
                 
                 },
                 methods: {
+                    initialize: function(){
+                        console.log("Initialized")
+                        this.items = new Array();
+                        //this.pallet = null;                        
+                    }
                     /*showitems: function(){
                         console.log(this.items);
                     }*/
@@ -114,10 +119,22 @@
 
             Vue.component('pallet-transfer-wizard',{
                 template: "#pallet-transfer-wizard-template",
-                props:['steps','test','input_value','source_pallet','dest_pallet','scanneditem'],
+                props:['steps','test','input_value'],
                 methods: {
+                    data: function(){
+                        return {
+                            dest_pallet:null,
+                            source_pallet:null,
+                            scanneditem: null
+                        }
+                    },
                     confirmStep:function(){
-
+                        /*if(this.input_value=="transf nou"){
+                            this.resetdest = true;
+                            this.initialize();
+                            this.resetdest = null;                            
+                            this.input_value = "palet sursa";
+                        }*/
                         console.log("*********************");
                         //if we do not have a new command, we perform our task
                         if(!arrContains(Object.keys(this.steps),this.input_value)){
@@ -126,30 +143,57 @@
                                 return;
                             }
                             this.step.perform({"parent":this,"input":this.input_value});
+                            this.step = this.steps["start"];
+                            
                         }
                         //if the value scanned is a command, then we start that command
                         //if that command can follow the present commmand
-                        else{
+                        else{                            
                             this.step = this.steps[this.input_value];                            
                             this.step.perform(null);
+                            if(this.input_value=="palet nou"){
+                                this.step = this.steps["start"];
+                            }
                         }
                         this.input_value = "";
                     },
                     transfer: function(item){
-                        console.log("Am primit "+item);
-                        this.scanneditem = item;
+                        if(this.source_pallet && this.dest_pallet){
+                            console.log("Mut itemul "+item+" din "+this.source_pallet+" in "+this.dest_pallet);
+                            this.scanneditem = item;
+                        }else{
+                            alert("Trebuie sa aveti alese atat paletul sursa cat si cel destinatie!");
+                        }
+                    }
+                    ,
+                    initialize: function(){
+                        this.step = this.steps["palet sursa"];
+                        this.source_pallet = null;                    
+                        this.dest_pallet = null;
+                        
                     }
                 },                                
                 created: function(){                                        
-                    this.step = this.steps["palet sursa"];
-                    this.source_pallet = null;                    
-                    this.dest_pallet = null;
+                    this.initialize();
                 }
             });
             new Vue({
                 el: '#pallet-transfer',
                 data: {
                     steps: {
+                        "transf nou":{
+                            prompt: null,
+                            type: "transf nou",
+                            okMsg: "transf nou ok", 
+                            cancelMsg: "", 
+                            followedBy: ["start", "palet sursa", "palet dest"],
+                            checkValidity: function(value){
+                                return true;
+                            },
+                            perform: function(value){
+                                this.isOk = true;
+                            }
+                        },
                         "palet nou":{
                             prompt: null,
                             type: "palet nou", 
@@ -162,10 +206,10 @@
                             perform: function(value){
                                 this.isOk = true;
                             }
-                        },
-                        "transf nou":{
+                        },                        
+                        "start":{
                             prompt: null,
-                            type: "transf nou", 
+                            type: "start", 
                             okMsg: "Transfer initializat", 
                             cancelMsg: "Transfer anulat", 
                             followedBy: ["palet nou"],
@@ -174,7 +218,8 @@
                             },
                             perform: function(value){
                                 if(value){
-                                    console.log("transf nou: "+value);
+                                    this.parent = value.parent;
+                                    console.log("start: "+value);
                                     value.parent.transfer(value.input);
                                     //value.parent.scanneditem=value.input;
                                 }
@@ -185,7 +230,7 @@
                             type: "palet sursa", 
                             okMesaj: "Palet sursa ales", 
                             cancelMsg: "Alegere palet sursa anulata",
-                            followedBy: ["palet nou", "palet dest"],
+                            followedBy: ["palet nou", "palet dest","transf nou"],
                             checkValidity: function(value){
                                 return true;
                             },
