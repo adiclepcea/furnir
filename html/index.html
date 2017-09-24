@@ -32,8 +32,14 @@
         <script type="text/x-template" id="pallet-transfer-wizard-template">
             <div>                
                 <div class="pane" id="header" style="text-align:center">                
-                    <div><h1>{{step.prompt}}</h1></div>
+                    <div><h1>{{this.step.prompt}}</h1></div>
                     <input type="text" id="source" v-on:keyup.enter="confirmStep" v-model="input_value"/>                                             
+                    <select v-if="this.materialsVisible" v-on:change="createPallet" id="material" v-model="material">
+                        <option value="ST">Stejar</option>
+                        <option value="FG">Fag</option>
+                        <option value="MX">Mix</option>
+                    </select>
+                    <span>{{this.material}}</span>
                 </div>
                 <div class="row">
                     <div class="col-sm-6">
@@ -119,23 +125,26 @@
 
             Vue.component('pallet-transfer-wizard',{
                 template: "#pallet-transfer-wizard-template",
-                props:['steps','test','input_value'],
+                props:['steps','test','material','input_value'],
                 methods: {
                     data: function(){
                         return {
                             dest_pallet:null,
                             source_pallet:null,
-                            scanneditem: null
+                            scanneditem: null,
+                            materialsVisible: false,
+                            
+                            //material: "d"
                         }
                     },
                     confirmStep:function(){
-                        /*if(this.input_value=="transf nou"){
-                            this.resetdest = true;
-                            this.initialize();
-                            this.resetdest = null;                            
-                            this.input_value = "palet sursa";
-                        }*/
-                        console.log("*********************");
+                        
+                        console.log("*********************"+this.input_value);
+                        if(this.input_value=="palet nou"){
+                            this.showMaterials();
+                        }else{
+                            this.hideMaterials();
+                        }
                         //if we do not have a new command, we perform our task
                         if(!arrContains(Object.keys(this.steps),this.input_value)){
                             if(!this.step.checkValidity(this.input_value)){
@@ -149,13 +158,19 @@
                         //if the value scanned is a command, then we start that command
                         //if that command can follow the present commmand
                         else{                            
-                            this.step = this.steps[this.input_value];                            
-                            this.step.perform(null);
-                            if(this.input_value=="palet nou"){
-                                this.step = this.steps["start"];
-                            }
+                            this.step = this.steps[this.input_value];    
+                            console.log(this.step.prompt);                        
+                            this.step.perform(null);                            
                         }
                         this.input_value = "";
+                    },
+                    showMaterials: function(){
+                        console.log("Material shown");
+                        this.materialsVisible = true;
+                    }
+                    ,
+                    hideMaterials: function(){
+                        this.materialsVisible = false;
                     },
                     transfer: function(item){
                         if(this.source_pallet && this.dest_pallet){
@@ -166,10 +181,18 @@
                         }
                     }
                     ,
+                    createPallet: function(){
+                        //TODO add code to create pallet                        
+                        this.input_value=this.material;
+                        this.confirmStep();
+                    }
+                    ,
                     initialize: function(){
                         this.step = this.steps["palet sursa"];
                         this.source_pallet = null;                    
                         this.dest_pallet = null;
+                        this.input_value = "";
+                        //this.material="dddd";
                         
                     }
                 },                                
@@ -181,30 +204,19 @@
                 el: '#pallet-transfer',
                 data: {
                     steps: {
-                        "transf nou":{
-                            prompt: null,
-                            type: "transf nou",
-                            okMsg: "transf nou ok", 
-                            cancelMsg: "", 
-                            followedBy: ["start", "palet sursa", "palet dest"],
-                            checkValidity: function(value){
-                                return true;
-                            },
-                            perform: function(value){
-                                this.isOk = true;
-                            }
-                        },
                         "palet nou":{
-                            prompt: null,
+                            prompt: "Alegeti tipul de material",
                             type: "palet nou", 
                             okMsg: "Palet nou creat", 
                             cancelMsg: "Creare palet nou anulata", 
-                            followedBy: ["transf nou", "palet sursa", "palet dest"],
+                            followedBy: ["palet sursa", "palet dest"],
                             checkValidity: function(value){
                                 return true;
                             },
                             perform: function(value){
-                                this.isOk = true;
+                                if(value){
+                                   //value.parent.createPallet(); 
+                                }
                             }
                         },                        
                         "start":{
@@ -230,7 +242,7 @@
                             type: "palet sursa", 
                             okMesaj: "Palet sursa ales", 
                             cancelMsg: "Alegere palet sursa anulata",
-                            followedBy: ["palet nou", "palet dest","transf nou"],
+                            followedBy: ["palet nou", "palet dest"],
                             checkValidity: function(value){
                                 return true;
                             },
@@ -245,7 +257,7 @@
                             type: "palet desti", 
                             okMesaj: "Palet destinatie ales", 
                             cancelMsg: "Alegere palet destinatie anulata",
-                            followedBy: ["palet nou","transf nou"],
+                            followedBy: ["palet nou"],
                             checkValidity: function(value){
                                 return true;
                             },

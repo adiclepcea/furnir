@@ -80,6 +80,9 @@ CREATE TABLE `pallets` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+alter table pallets add column essences_id integer unsigned;
+alter table pallets add foreign key (essences_id)  references essences(essences_id);
+
 --
 -- Dumping data for table `pallets`
 --
