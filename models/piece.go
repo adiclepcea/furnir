@@ -57,3 +57,9 @@ func (scannedPiece ScannedPiece) NewFromScan(Scan string) (*ScannedPiece, error)
 func (scannedPiece *ScannedPiece) Area() float32 {
 	return float32(scannedPiece.Length) * float32(scannedPiece.Width) / float32(10000) * float32(scannedPiece.SheetCount)
 }
+
+//MovePieceBetweenPallets will move a scanned piece between the container
+//having the SourceID as id and the one having the DestID as id
+func MovePieceBetweenPallets(SourceID int64, DestID int64) error {
+
+}
