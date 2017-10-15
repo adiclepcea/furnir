@@ -60,6 +60,6 @@ func (scannedPiece *ScannedPiece) Area() float32 {
 
 //MovePieceBetweenPallets will move a scanned piece between the container
 //having the SourceID as id and the one having the DestID as id
-func MovePieceBetweenPallets(SourceID int64, DestID int64) error {
+/*func MovePieceBetweenPallets(SourceID int64, DestID int64) error {
 
-}
+}*/

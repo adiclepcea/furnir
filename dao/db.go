@@ -1,4 +1,4 @@
-package models
+package dao
 
 import (
 	"database/sql"
@@ -8,17 +8,18 @@ import (
 )
 
 //InitDB initializes the connection to the database
-//example ConnectionString "furnir:Furnir123@tcp(127.0.0.1:13306)/furnir?parseTime=true"
-func InitDB(ConnectionString string) *sql.DB {
+func InitDB() (*sql.DB, error) {
 	//"user:pass@/db"
-	db, err := sql.Open("mysql", ConnectionString)
+	db, err := sql.Open("mysql", "furnir:Furnir123@tcp(127.0.0.1:3306)/furnir")
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
+		return nil, err
 	}
 
 	if err = db.Ping(); err != nil {
-		log.Panic(err)
+		log.Println(err)
+		return nil, err
 	}
 	log.Println("Connected to DB")
-	return db
+	return db, nil
 }

@@ -1,8 +1,8 @@
 package models
 
 import (
-	"strconv"
-	"time"
+	_ "encoding/json"
+
 )
 
 //ConnectionString is the string used to connect to the MySql database
@@ -14,17 +14,18 @@ func init() {
 
 //Pallet is the structure used to store a Pallet in the database
 type Pallet struct {
-	ID      int64     `json:"id" db:"pallets_id"`
-	Created time.Time `json:"created"`
+	ID   int64  `json:"id"`
+	Code string `json:"code"`
 }
 
 //NewPallet will create a new Pallet
-func NewPallet() (*Pallet, error) {
-	db := InitDB(ConnectionString)
-	defer db.Close()
-	if db == nil {
-		return nil, nil
+/*func NewPallet() (*Pallet, error) {
+	db, err := InitDB()
+	if err != nil {
+		return nil, err
+>>>>>>> Add db structure and essence REST
 	}
+	defer db.Close()
 	res, err := db.Exec("Insert into pallets() values()")
 	if err != nil {
 		return nil, err
@@ -32,86 +33,21 @@ func NewPallet() (*Pallet, error) {
 	id, err := res.LastInsertId()
 	if err != nil {
 		return nil, err
+
 	}
 
-	rows, err := db.Query("Select pallets_id, created from pallets where pallets_id=" + strconv.FormatInt(id, 10))
-
+	return &Pallet{ID: id, Code: ""}, nil
+}*/
+/*
+//MovePieceToPallet will move the specified piece from
+//this container the specified one
+func MovePieceToPallet(piece ScannedPiece, toPallet Pallet) error {
+	db, err := InitDB()
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
-	if !rows.Next() {
-		return nil, nil
-	}
-
-	pallet := Pallet{}
-	err = rows.Scan(&pallet.ID, &pallet.Created)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &pallet, nil
-}
-
-//GetPalletByID obtains one pallet with a certain ID from the database
-func GetPalletByID(id int64) (*Pallet, error) {
-	db := InitDB(ConnectionString)
 	defer db.Close()
-	if db == nil {
-		return nil, nil
-	}
 
-	rows, err := db.Query("Select pallets_id, created from pallets where pallets_id=" + strconv.FormatInt(id, 10))
-
-	if err != nil {
-		return nil, err
-	}
-
-	if !rows.Next() {
-		return nil, nil
-	}
-
-	pallet := Pallet{}
-	err = rows.Scan(&pallet.ID, &pallet.Created)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &pallet, nil
-
-}
-
-//GetPallets obtains all the pallets from the database
-func GetPallets() ([]Pallet, error) {
-	db := InitDB(ConnectionString)
-	defer db.Close()
-	if db == nil {
-		return nil, nil
-	}
-
-	rows, err := db.Query("Select pallets_id, created from pallets")
-
-	if err != nil {
-		return nil, err
-	}
-
-	pallets := []Pallet{}
-
-	for rows.Next() {
-		pallet := Pallet{}
-		err = rows.Scan(&pallet.ID, &pallet.Created)
-		if err != nil {
-			return nil, err
-		}
-		pallets = append(pallets, pallet)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return pallets, nil
-
-}
+	res, err := db.exec("select ")
+}*/
