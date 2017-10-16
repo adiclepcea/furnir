@@ -10,7 +10,7 @@ import (
 //InitDB initializes the connection to the database
 func InitDB() (*sql.DB, error) {
 	//"user:pass@/db"
-	db, err := sql.Open("mysql", "furnir:Furnir123@tcp(127.0.0.1:3306)/furnir")
+	db, err := sql.Open("mysql", "furnir:Furnir123@tcp(127.0.0.1:3306)/furnir?parseTime=true")
 	if err != nil {
 		log.Println(err)
 		return nil, err

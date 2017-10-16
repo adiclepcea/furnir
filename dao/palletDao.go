@@ -24,7 +24,7 @@ func (palletDao PalletDao) SavePallet(pallet models.Pallet) (*models.Pallet, err
 	if pallet.ID == 0 {
 		var res sql.Result
 		if pallet.Essence.ID != 0 {
-			res, err = db.Exec("Insert into pallets(essence_id) values(?)", pallet.Essence.ID)
+			res, err = db.Exec("Insert into pallets(essences_id) values(?)", pallet.Essence.ID)
 		}else{
 			res, err = db.Exec("Insert into pallets() values()")
 		}
@@ -37,15 +37,16 @@ func (palletDao PalletDao) SavePallet(pallet models.Pallet) (*models.Pallet, err
 			return nil, err
 		}
 		pallet.ID = id
+		
 	} else {
-		_, err = db.Exec("Update pallet set essence=? where pallets_id=?", pallet.Essence.ID, pallet.ID)
+		_, err = db.Exec("Update pallets set essences_id=? where pallets_id=?", pallet.Essence.ID, pallet.ID)
 		if err != nil {
 			log.Printf("Error saving pallet: %s\r\n", err.Error())
 			return nil, err
 		}
 	}
 
-	return &pallet, nil
+	return palletDao.FindPalletByID(pallet.ID)
 }
 
 //FindPalletByID finds the pallet with the selected id
