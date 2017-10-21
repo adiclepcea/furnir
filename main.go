@@ -78,15 +78,14 @@ func pieceHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	//pallet, err := models.NewPallet()
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-	//log.Println(pallet.ID)
+	
+	fs := http.FileServer(http.Dir("static"))
+	http.HandleFunc("/",http.StripPrefix("/",fs).ServeHTTP)
 	essenceService = service.NewEssenceService(dao.EssenceDao{})
 	http.HandleFunc("/pallet", palletHandler)
 	http.HandleFunc("/essence", essenceHandler)
 	http.HandleFunc("/piece", pieceHandler)
+	fmt.Println("Starting furnir server on port 5000 ...")
 	http.ListenAndServe(":5000", nil)
 	fmt.Println("llll")
 }
