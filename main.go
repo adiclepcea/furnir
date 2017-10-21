@@ -11,6 +11,7 @@ import (
 
 var essenceService service.EssenceService
 var palletService service.PalletService
+var pieceService service.PieceService
 
 func essenceHandler(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
@@ -55,6 +56,27 @@ func palletHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func pieceHandler(w http.ResponseWriter, r *http.Request) {
+	encoder := json.NewEncoder(w)
+	switch r.Method {
+	case http.MethodGet:
+		pieceService.GetPiece(w, r)
+		break
+	case http.MethodPost:
+		pieceService.PostPiece(w, r)
+		break
+	case http.MethodPut:
+		pieceService.PutPiece(w, r)
+		break
+	case http.MethodDelete:
+		pieceService.DeletePiece(w,r)
+		break
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		encoder.Encode(service.Error{Message:"Unknown method supplied"})
+	}
+}
+
 func main() {
 	//pallet, err := models.NewPallet()
 	//if err != nil {
@@ -64,6 +86,7 @@ func main() {
 	essenceService = service.NewEssenceService(dao.EssenceDao{})
 	http.HandleFunc("/pallet", palletHandler)
 	http.HandleFunc("/essence", essenceHandler)
+	http.HandleFunc("/piece", pieceHandler)
 	http.ListenAndServe(":5000", nil)
 	fmt.Println("llll")
 }

@@ -11,12 +11,20 @@ import (
 
 //ScannedPiece represents the contents of a scanned package
 type ScannedPiece struct {
-	Code           string
-	Essence        string
-	OriginalPallet int64
-	SheetCount     int
-	Length         int
-	Width          int
+	Code           string `json:"code"`
+	SheetCount     int 	  `json:"sheet_count"`
+	OriginalPallet int64  `json:"original_pallet"`
+	Length         int 	  `json:"length"`
+	Width          int 	  `json:"width"`
+}
+
+//Piece represents a package of veneer inside a pallet
+type Piece struct {
+	Scanned ScannedPiece `json:"scanned"`
+	Essence Essence  `json:"essence"`
+	PalletsID int64  `json:"pallets_id"`
+	Barcode   string `json:"barcode"`
+	ID 		  int64  `json:"id"`
 }
 
 //NewFromScan will return a new ScannedPiece from the string passed in
