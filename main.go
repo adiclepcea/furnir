@@ -12,6 +12,7 @@ import (
 var essenceService service.EssenceService
 var palletService service.PalletService
 var pieceService service.PieceService
+var transferService service.TransferService
 
 func essenceHandler(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
@@ -75,6 +76,19 @@ func pieceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func transferHandler(w http.ResponseWriter, r *http.Request) {
+	encoder := json.NewEncoder(w)
+
+	switch r.Method {
+	case http.MethodPost:
+		transferService.PostTransfer(w, r)
+		break
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		encoder.Encode(service.Error{Message: "Unknown method supplied"})
+	}
+}
+
 func main() {
 
 	fs := http.FileServer(http.Dir("static"))
@@ -83,6 +97,7 @@ func main() {
 	http.HandleFunc("/pallet", palletHandler)
 	http.HandleFunc("/essence", essenceHandler)
 	http.HandleFunc("/piece", pieceHandler)
+	http.HandleFunc("/transfer", transferHandler)
 	fmt.Println("Starting furnir server on port 5000 ...")
 	http.ListenAndServe(":5000", nil)
 	fmt.Println("llll")

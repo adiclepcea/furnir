@@ -223,3 +223,70 @@ func (pieceDao PieceDao) DeletePieceByID(id int64) error {
 	}
 	return nil
 }
+
+//TransferPieceByBarcode will transfer a piece with the giver barcode between two pallets
+func (pieceDao PieceDao) TransferPieceByBarcode(code string, srcPalletID int64, destPalletID int64) error {
+	var palletRepo PalletDao
+
+	db, err := InitDB()
+	if err != nil {
+		return err
+	}
+
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	dstPallet, err := palletRepo.FindPalletByID(destPalletID)
+
+	if err != nil {
+		return err
+	}
+
+	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets, e.essences_id, e.name, e.code  
+		from pieces p left outer join essences e on p.essences_id=e.essences_id where p.barcode=? and p.pallets_id=?`, code, srcPalletID)
+	if err != nil {
+		return err
+	}
+	var piece models.Piece
+	if res.Next() {
+		piece = models.Piece{}
+		piece.Essence = models.Essence{}
+		piece.Scanned = models.ScannedPiece{}
+		res.Scan(&piece.ID,
+			&piece.PalletsID,
+			&piece.Barcode,
+			&piece.Scanned.Code,
+			&piece.Scanned.Length,
+			&piece.Scanned.Width,
+			&piece.Scanned.SheetCount,
+			&piece.Essence.ID,
+			&piece.Essence.Name,
+			&piece.Essence.Code)
+	}
+
+	if piece.ID != 0 {
+		_, err = db.Exec("update pieces set pallets_id=? where pieces_id=?", destPalletID, piece.ID)
+	} else {
+		sc, err := models.ScannedPiece{}.NewFromScan(code)
+		if err != nil {
+			return err
+		}
+		piece.Scanned = *sc
+		piece.Barcode = code
+		piece.PalletsID = destPalletID
+		piece.Essence = dstPallet.Essence
+
+		_, err = pieceDao.SavePiece(piece)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit()
+
+	return err
+}
