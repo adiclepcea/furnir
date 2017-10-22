@@ -51,11 +51,11 @@ func (essenceDao EssenceDao) FindEssenceByID(id int64) (*models.Essence, error) 
 	}
 	defer db.Close()
 	res, err := db.Query("Select essences_id, name, code from essences where essences_id=?", id)
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if res.Next() {
 		res.Scan(&essence.ID, &essence.Name, &essence.Code)
 		return &essence, nil
@@ -72,7 +72,7 @@ func (essenceDao EssenceDao) FindEssenceByName(name string) (*models.Essence, er
 	}
 	defer db.Close()
 	res, err := db.Query("Select essences_id, name, code from essences where name=?", name)
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (essenceDao EssenceDao) FindEssenceByCode(code string) (*models.Essence, er
 	}
 	defer db.Close()
 	res, err := db.Query("Select essences_id, name, code from essences where code=?", code)
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -108,15 +108,16 @@ func (essenceDao EssenceDao) FindEssenceByCode(code string) (*models.Essence, er
 //FindAllEssences returns all essences in the system
 func (essenceDao EssenceDao) FindAllEssences() ([]models.Essence, error) {
 	var essences []models.Essence
+	essences = make([]models.Essence, 0)
 	db, err := InitDB()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 	res, err := db.Query("Select essences_id, name, code from essences")
-	if err!=nil {
+	if err != nil {
 		return nil, err
-	}	
+	}
 	for res.Next() {
 		essence := models.Essence{}
 		res.Scan(&essence.ID, &essence.Name, &essence.Code)
@@ -126,16 +127,16 @@ func (essenceDao EssenceDao) FindAllEssences() ([]models.Essence, error) {
 }
 
 //DeleteEssenceByID deletes the essence having the passed id
-func (essenceDao EssenceDao) DeleteEssenceByID(id int64) (error) {
-	
+func (essenceDao EssenceDao) DeleteEssenceByID(id int64) error {
+
 	db, err := InitDB()
 	if err != nil {
-		return  err
+		return err
 	}
 	defer db.Close()
-	_,err = db.Exec("Delete from essences where essences_id=?", id)
-	if err!=nil {
+	_, err = db.Exec("Delete from essences where essences_id=?", id)
+	if err != nil {
 		return err
-	}	
-	return  nil
+	}
+	return nil
 }

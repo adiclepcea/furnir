@@ -5,6 +5,7 @@
         <link rel="stylesheet" href="./css/bootstrap-theme.min.css"/>
         <script src="./js/bootstrap.min.js" ></script>
         <script src="./js/vue.js"></script>
+        <script src="./js/axios.min.js"></script>
     </head>
 
     <body>
@@ -32,14 +33,16 @@
         <script type="text/x-template" id="pallet-transfer-wizard-template">
             <div>                
                 <div class="pane" id="header" style="text-align:center">                
-                    <div><h1>{{this.step.prompt}}</h1></div>
-                    <input type="text" id="source" v-on:keyup.enter="confirmStep" v-model="inputvalue"/>                                             
-                    <select v-if="this.materialsVisible" v-on:change="createPallet" id="material" v-model="material">
-                        <option value="ST">Stejar</option>
-                        <option value="FG">Fag</option>
-                        <option value="MX">Mix</option>
+                    <div v-if="this.message" style="color:red"><h2>{{this.message}}</h2></div>
+                    <div><h1>{{this.step.prompt}}</h1></div>                    
+                    <input type="text" id="source" v-on:keyup.enter="confirmStep" v-model="inputvalue"/>      
+                                                   
+                    <select v-if="this.materialsVisible" v-on:change="createPallet" id="material" name="material" v-model="material">
+                            <option v-for="essence in essences" v-bind:value="essence.id">
+                                    {{ essence.name }}
+                            </option>        
                     </select>
-                    <span>{{this.material}}</span>
+                    <span v-if="this.materialsVisible">{{this.material}}</span>
                 </div>
                 <div class="row">
                     <div class="col-sm-6">
@@ -57,7 +60,7 @@
             <div>
                 <div class="alert alert-info" style="font-size:20px">Palet sursa <span v-if="pallet!=null">{{pallet}}</span></div>
                 <div v-if="pallet!=null">
-                        
+                    <div v-for="item in items">{{item}}</div> 
                 </div>
             </div>
         </script>
@@ -75,16 +78,38 @@
             Vue.component('palet-sursa',{
                 template: "#source-pallet-template",
                 props: ['pallet','scanneditem'],
+                data: function(){
+                    return {
+                        items: new Array()
+                    };
+                },
                 created: function(){
                     this.pallet = null;
                     this.items = new Array();
                 },
                 watch:{
                     pallet : function(val){
-                        //this.items = new Array();
-                    },
-                    scanneditem: function(val){
-                        //alert(val);
+                        this.initialize();                               
+                        axios.get("/piece?pallet_id="+val)
+                            .then(r => {
+                            for(i=0;i<r.data.length;i++){
+                                this.items.push(r.data[i].barcode);
+                            }                                
+                            })
+                            .catch(function(err){
+                                this.items = [];
+                                alert(err);
+                            });
+                        },
+                        scanneditem: function(val){
+                            //alert(val);
+                        }
+                },
+                methods:{
+                    initialize: function(){
+                        console.log("Initialized")
+                        this.items = new Array();
+                        //this.pallet = null;                        
                     }
                 }
             });
@@ -93,16 +118,30 @@
                 template: "#dest-pallet-template",
                 props: ['pallet','scanneditem','resetdest'],  
                 data: function(){
-                    return {items: new Array()};
+                    return {
+                        items: new Array()
+                    };
                 },
                 created: function(){
                     this.initialize();
                 },
                 watch:{
                     pallet : function(val){
-                        this.initialize();
-                        //TODO add code to retrieve the items in this pallet
-                        console.log(this.items);
+                        this.initialize(); 
+                        if(this.pallet==null){
+                            return;
+                        }
+                        axios.get("/piece?pallet_id="+val)
+                            .then(r => {
+                            for(i=0;i<r.data.length;i++){
+                                this.items.push(r.data[i].barcode);
+                            }                                
+                            })
+                            .catch(function(err){
+                                this.items = [];
+                                alert(err);
+                            });
+                              
                     },
                     scanneditem: function(val){ 
                         console.log(val);                           
@@ -125,7 +164,7 @@
 
             Vue.component('pallet-transfer-wizard',{
                 template: "#pallet-transfer-wizard-template",
-                props:['steps','test','material','inputvalue'],
+                props:['steps','test','inputvalue'],
                 methods: {
                     data: function(){
                         return {
@@ -133,15 +172,40 @@
                             source_pallet:null,
                             scanneditem: null,
                             materialsVisible: false,
-                            //material: "d"
+                            material: "",
+                            essences:[],
+                            flagPaletNou: false,
+                            message: "ssss"
                         }
                     },
-                    confirmStep:function(){
-                        
+                    confirmStep:function(){                        
                         console.log("*********************"+this.inputvalue);
                         if(this.inputvalue=="palet nou"){
+                            this.essences = [];
                             this.showMaterials();
+                            this.flagPaletNou = true;
                         }else{
+                            if(this.flagPaletNou){
+                                console.log(this.flagPaletNou);
+                                var found = false;
+                                //search for new pallet essence choice
+                                for(i=0;i<this.essences.length;i++){
+                                    essence = this.essences[i];
+                                    if(essence.id==this.inputvalue){
+                                        this.material = essence.id;
+                                        found=true;
+                                        break;
+                                    }
+                                }
+                                if(!found){                                    
+                                    if(!arrContains(Object.keys(this.steps),this.inputvalue)){
+                                        alert("Esenta necunoscuta!");
+                                        return;
+                                    }
+                                }                                
+                                this.createPallet();
+                                return;
+                            }                            
                             this.hideMaterials();
                         }
                         //if we do not have a new command, we perform our task
@@ -156,7 +220,7 @@
                         }
                         //if the value scanned is a command, then we start that command
                         //if that command can follow the present commmand
-                        else{                            
+                        else{    
                             this.step = this.steps[this.inputvalue];    
                             console.log(this.step.prompt);                        
                             this.step.perform(null);                            
@@ -164,8 +228,15 @@
                         this.inputvalue = "";
                     },
                     showMaterials: function(){
-                        console.log("Material shown");
-                        this.materialsVisible = true;
+                        console.log("Material shown");                        
+                        axios.get("/essence").then(
+                            r => { 
+                                this.essences = r.data;
+                                this.materialsVisible = true; 
+                                this.material = 0;
+                                this.$forceUpdate();
+                                }
+                            );
                     }
                     ,
                     hideMaterials: function(){
@@ -180,10 +251,19 @@
                         }
                     }
                     ,
-                    createPallet: function(){
-                        //TODO add code to create pallet                        
-                        this.inputvalue=this.material;
-                        this.confirmStep();
+                    createPallet: function(){                 
+                        
+                        axios.post("/pallet",{id:0,essence:{id:this.material}})
+                            .then(r=>{
+                                this.inputvalue=this.material;                                
+                                this.flagPaletNou = false;
+                                this.$forceUpdate();                                
+                                this.confirmStep();                                
+                            }                            
+                            )
+                            .catch(function(error){
+                                alert(error);
+                            });
                     }
                     ,
                     initialize: function(){
@@ -214,7 +294,8 @@
                             },
                             perform: function(value){
                                 if(value){
-                                   //value.parent.createPallet(); 
+                                    
+                                    console.log(value);
                                 }
                             }
                         },                        
@@ -247,7 +328,20 @@
                             },
                             perform: function(value){
                                 if(value){
-                                    value.parent.source_pallet = value.input;
+                                    axios.get("/pallet?id="+value.input)
+                                    .then(r => {                                        
+                                        if(!r.data.hasOwnProperty("id")){
+                                            value.parent.message="Paletul "+value.input+" nu exista!";
+                                            value.parent.$forceUpdate();
+                                            return;
+                                        }
+                                        value.parent.message = null;
+                                        value.parent.source_pallet = value.input;
+                                        value.parent.$forceUpdate();
+                                    })
+                                    .catch(function(err){
+                                        alert(err);
+                                    });                                    
                                 }
                             }
                         },
@@ -261,8 +355,21 @@
                                 return true;
                             },
                             perform: function(value){
-                                if(value){
-                                    value.parent.dest_pallet = value.input;
+                                if(value){        
+                                    axios.get("/pallet?id="+value.input)
+                                    .then(r => {                                        
+                                        if(!r.data.hasOwnProperty("id")){
+                                            value.parent.message="Paletul "+value.input+" nu exista!";
+                                            value.parent.$forceUpdate();
+                                            return;
+                                        }
+                                        value.parent.message = null;
+                                        value.parent.dest_pallet = value.input;
+                                        value.parent.$forceUpdate();
+                                    })
+                                    .catch(function(err){
+                                        alert(err);
+                                    });                                    
                                 }
                             }
                         },

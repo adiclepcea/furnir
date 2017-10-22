@@ -1,8 +1,8 @@
 package dao
 
 import (
-	"fmt"
 	"database/sql"
+	"fmt"
 	"log"
 	//mysql driver
 	"github.com/adiclepcea/furnir/models"
@@ -16,7 +16,7 @@ type PieceDao struct {
 //SavePiece will insert or update a piece
 func (pieceDao PieceDao) SavePiece(piece models.Piece) (*models.Piece, error) {
 
-	if piece.PalletsID == 0{
+	if piece.PalletsID == 0 {
 		return nil, fmt.Errorf("A piece must have a pallet")
 	}
 	db, err := InitDB()
@@ -28,21 +28,21 @@ func (pieceDao PieceDao) SavePiece(piece models.Piece) (*models.Piece, error) {
 	if piece.ID == 0 {
 		var res sql.Result
 		if piece.Essence.ID != 0 {
-			res, err = db.Exec("Insert into pieces(pallets_id, essences_id,barcode,code,length,width,sheets) values(?,?,?,?,?,?,?)", 
-				piece.PalletsID, 
+			res, err = db.Exec("Insert into pieces(pallets_id, essences_id,barcode,code,length,width,sheets) values(?,?,?,?,?,?,?)",
+				piece.PalletsID,
 				piece.Essence.ID,
 				piece.Barcode,
-				piece.Scanned.Code, 
-				piece.Scanned.Length, 
-				piece.Scanned.Width,  
+				piece.Scanned.Code,
+				piece.Scanned.Length,
+				piece.Scanned.Width,
 				piece.Scanned.SheetCount)
-		}else{
+		} else {
 			res, err = db.Exec("Insert into pieces(pallets_id, barcode,code, length, width, sheets) values(?,?,?,?,?,?)",
-				piece.PalletsID, 
+				piece.PalletsID,
 				piece.Barcode,
-				piece.Scanned.Code, 
-				piece.Scanned.Length, 
-				piece.Scanned.Width,  
+				piece.Scanned.Code,
+				piece.Scanned.Length,
+				piece.Scanned.Width,
 				piece.Scanned.SheetCount)
 		}
 		if err != nil {
@@ -54,17 +54,17 @@ func (pieceDao PieceDao) SavePiece(piece models.Piece) (*models.Piece, error) {
 			return nil, err
 		}
 		piece.ID = id
-		
+
 	} else {
-		_, err = db.Exec("Update pieces set pallets_id=?, essences_id=?, barcode=?,code=?, length=?, width=?, sheets=? where pieces_id=?", 
-				piece.PalletsID, 
-				piece.Essence.ID, 
-				piece.Barcode,
-				piece.Scanned.Code, 
-				piece.Scanned.Length, 
-				piece.Scanned.Width, 
-				piece.Scanned.SheetCount,
-				piece.ID)
+		_, err = db.Exec("Update pieces set pallets_id=?, essences_id=?, barcode=?,code=?, length=?, width=?, sheets=? where pieces_id=?",
+			piece.PalletsID,
+			piece.Essence.ID,
+			piece.Barcode,
+			piece.Scanned.Code,
+			piece.Scanned.Length,
+			piece.Scanned.Width,
+			piece.Scanned.SheetCount,
+			piece.ID)
 		if err != nil {
 			log.Printf("Error saving piece: %s\r\n", err.Error())
 			return nil, err
@@ -77,8 +77,8 @@ func (pieceDao PieceDao) SavePiece(piece models.Piece) (*models.Piece, error) {
 //FindPieceByID finds the piece with the selected id
 func (pieceDao PieceDao) FindPieceByID(id int64) (*models.Piece, error) {
 	piece := models.Piece{}
-	piece.Essence = models.Essence {}
-	piece.Scanned = models.ScannedPiece {}
+	piece.Essence = models.Essence{}
+	piece.Scanned = models.ScannedPiece{}
 	db, err := InitDB()
 	if err != nil {
 		return nil, err
@@ -86,23 +86,23 @@ func (pieceDao PieceDao) FindPieceByID(id int64) (*models.Piece, error) {
 	defer db.Close()
 	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets, e.essences_id, e.name, e.code  
 		from pieces p left outer join essences e on p.essences_id=e.essences_id where pieces_id=?`, id)
-	
+
 	if err != nil {
 		return nil, err
 	}
 
 	if res.Next() {
-		res.Scan(&piece.ID, 
-			&piece.PalletsID, 
+		res.Scan(&piece.ID,
+			&piece.PalletsID,
 			&piece.Barcode,
-			&piece.Scanned.Code, 
-			&piece.Scanned.Length, 
+			&piece.Scanned.Code,
+			&piece.Scanned.Length,
 			&piece.Scanned.Width,
 			&piece.Scanned.SheetCount,
 			&piece.Essence.ID,
 			&piece.Essence.Name,
 			&piece.Essence.Code)
-	
+
 		return &piece, nil
 	}
 
@@ -112,25 +112,26 @@ func (pieceDao PieceDao) FindPieceByID(id int64) (*models.Piece, error) {
 //FindPiecesByBarcode finds the pieces by barcode
 func (pieceDao PieceDao) FindPiecesByBarcode(code string) ([]models.Piece, error) {
 	var pieces []models.Piece
+	pieces = make([]models.Piece, 0)
 	db, err := InitDB()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets, e.essences_id, e.name, e.code  
-		from pieces p left outer join essences e on p.essences_id=e.essences_id where p.barcode=?`,code)
-	if err!=nil {
+		from pieces p left outer join essences e on p.essences_id=e.essences_id where p.barcode=?`, code)
+	if err != nil {
 		return nil, err
-	}	
+	}
 	for res.Next() {
 		piece := models.Piece{}
 		piece.Essence = models.Essence{}
 		piece.Scanned = models.ScannedPiece{}
-		res.Scan(&piece.ID, 
-			&piece.PalletsID, 
+		res.Scan(&piece.ID,
+			&piece.PalletsID,
 			&piece.Barcode,
-			&piece.Scanned.Code, 
-			&piece.Scanned.Length, 
+			&piece.Scanned.Code,
+			&piece.Scanned.Length,
 			&piece.Scanned.Width,
 			&piece.Scanned.SheetCount,
 			&piece.Essence.ID,
@@ -144,25 +145,26 @@ func (pieceDao PieceDao) FindPiecesByBarcode(code string) ([]models.Piece, error
 //FindPiecesByPalletsID finds the pieces inside the selected pallet
 func (pieceDao PieceDao) FindPiecesByPalletsID(palletsID int64) ([]models.Piece, error) {
 	var pieces []models.Piece
+	pieces = make([]models.Piece, 0)
 	db, err := InitDB()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets, e.essences_id, e.name, e.code  
-		from pieces p left outer join essences e on p.essences_id=e.essences_id where p.pallets_id=?`,palletsID)
-	if err!=nil {
+		from pieces p left outer join essences e on p.essences_id=e.essences_id where p.pallets_id=?`, palletsID)
+	if err != nil {
 		return nil, err
-	}	
+	}
 	for res.Next() {
 		piece := models.Piece{}
 		piece.Essence = models.Essence{}
 		piece.Scanned = models.ScannedPiece{}
-		res.Scan(&piece.ID, 
-			&piece.PalletsID, 
+		res.Scan(&piece.ID,
+			&piece.PalletsID,
 			&piece.Barcode,
-			&piece.Scanned.Code, 
-			&piece.Scanned.Length, 
+			&piece.Scanned.Code,
+			&piece.Scanned.Length,
 			&piece.Scanned.Width,
 			&piece.Scanned.SheetCount,
 			&piece.Essence.ID,
@@ -176,7 +178,8 @@ func (pieceDao PieceDao) FindPiecesByPalletsID(palletsID int64) ([]models.Piece,
 //FindAllPieces returns all pieces in the system
 func (pieceDao PieceDao) FindAllPieces() ([]models.Piece, error) {
 	var pieces []models.Piece
-	
+	pieces = make([]models.Piece, 0)
+
 	db, err := InitDB()
 	if err != nil {
 		return nil, err
@@ -184,18 +187,18 @@ func (pieceDao PieceDao) FindAllPieces() ([]models.Piece, error) {
 	defer db.Close()
 	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets, e.essences_id, e.name, e.code  
 		from pieces p left outer join essences e on p.essences_id=e.essences_id`)
-	if err!=nil {
+	if err != nil {
 		return nil, err
-	}	
+	}
 	for res.Next() {
 		piece := models.Piece{}
 		piece.Essence = models.Essence{}
 		piece.Scanned = models.ScannedPiece{}
-		res.Scan(&piece.ID, 
-			&piece.PalletsID, 
+		res.Scan(&piece.ID,
+			&piece.PalletsID,
 			&piece.Barcode,
-			&piece.Scanned.Code, 
-			&piece.Scanned.Length, 
+			&piece.Scanned.Code,
+			&piece.Scanned.Length,
 			&piece.Scanned.Width,
 			&piece.Scanned.SheetCount,
 			&piece.Essence.ID,
@@ -207,16 +210,16 @@ func (pieceDao PieceDao) FindAllPieces() ([]models.Piece, error) {
 }
 
 //DeletePieceByID deletes the piece having the passed id
-func (pieceDao PieceDao) DeletePieceByID(id int64) (error) {
-	
+func (pieceDao PieceDao) DeletePieceByID(id int64) error {
+
 	db, err := InitDB()
 	if err != nil {
-		return  err
+		return err
 	}
 	defer db.Close()
-	_,err = db.Exec("Delete from pieces where pieces_id=?", id)
-	if err!=nil {
+	_, err = db.Exec("Delete from pieces where pieces_id=?", id)
+	if err != nil {
 		return err
-	}	
-	return  nil
+	}
+	return nil
 }

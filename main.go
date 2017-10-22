@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/adiclepcea/furnir/service"
 	"github.com/adiclepcea/furnir/dao"
+	"github.com/adiclepcea/furnir/service"
 )
 
 var essenceService service.EssenceService
@@ -19,21 +19,19 @@ func essenceHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		essenceService.GetEssence(w, r)
 		return
-	}else if r.Method == http.MethodPost {
+	} else if r.Method == http.MethodPost {
 		essenceService.PostEssence(w, r)
 		return
-	}else if r.Method == http.MethodPut {
+	} else if r.Method == http.MethodPut {
 		essenceService.PutEssence(w, r)
 		return
-	}else if r.Method == http.MethodDelete {
+	} else if r.Method == http.MethodDelete {
 		essenceService.DeleteEssence(w, r)
 		return
 	}
 	w.WriteHeader(http.StatusMethodNotAllowed)
-	encoder.Encode(service.Error{Message:"Unknown method supplied"})
+	encoder.Encode(service.Error{Message: "Unknown method supplied"})
 }
-
-
 
 func palletHandler(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
@@ -48,11 +46,11 @@ func palletHandler(w http.ResponseWriter, r *http.Request) {
 		palletService.PutPallet(w, r)
 		break
 	case http.MethodDelete:
-		palletService.DeletePallet(w,r)
+		palletService.DeletePallet(w, r)
 		break
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		encoder.Encode(service.Error{Message:"Unknown method supplied"})
+		encoder.Encode(service.Error{Message: "Unknown method supplied"})
 	}
 }
 
@@ -69,18 +67,18 @@ func pieceHandler(w http.ResponseWriter, r *http.Request) {
 		pieceService.PutPiece(w, r)
 		break
 	case http.MethodDelete:
-		pieceService.DeletePiece(w,r)
+		pieceService.DeletePiece(w, r)
 		break
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		encoder.Encode(service.Error{Message:"Unknown method supplied"})
+		encoder.Encode(service.Error{Message: "Unknown method supplied"})
 	}
 }
 
 func main() {
-	
+
 	fs := http.FileServer(http.Dir("static"))
-	http.HandleFunc("/",http.StripPrefix("/",fs).ServeHTTP)
+	http.HandleFunc("/", http.StripPrefix("/", fs).ServeHTTP)
 	essenceService = service.NewEssenceService(dao.EssenceDao{})
 	http.HandleFunc("/pallet", palletHandler)
 	http.HandleFunc("/essence", essenceHandler)

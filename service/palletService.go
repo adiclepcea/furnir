@@ -1,53 +1,52 @@
 package service
 
 import (
-	"fmt"
-	"net/http"
-	"log"
-	"strconv"
 	"encoding/json"
+	"fmt"
 	"github.com/adiclepcea/furnir/dao"
 	"github.com/adiclepcea/furnir/models"
+	"log"
+	"net/http"
+	"strconv"
 )
-
 
 //PalletService serves as a prototype for serving pallet
 //operations
-type PalletService struct{
+type PalletService struct {
 	palletRepo dao.PalletDao
 }
 
 //NewPalletService returns a new instance of PalletService using the passed
 //in dao.PalletDao
-func NewPalletService(palletRepo dao.PalletDao)(PalletService){
+func NewPalletService(palletRepo dao.PalletDao) PalletService {
 	es := PalletService{palletRepo: palletRepo}
 	return es
 }
 
 //PutPallet translates a PUT request to an pallet modification
-func (palletService *PalletService) PutPallet(w http.ResponseWriter, r *http.Request){
+func (palletService *PalletService) PutPallet(w http.ResponseWriter, r *http.Request) {
 	var palletRepo dao.PalletDao
 
 	decoder := json.NewDecoder(r.Body)
 	pallet := models.Pallet{}
 
 	encoder := json.NewEncoder(w)
-	
+
 	err := decoder.Decode(&pallet)
 
-	if err!=nil || pallet.ID == 0{
+	if err != nil || pallet.ID == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		encoder.Encode(&Error{Message: "Invalid pallet supplied"})
 		return
 	}
-	
+
 	pal, err := palletRepo.SavePallet(pallet)
-	
+
 	encoder.Encode(pal)
 }
 
 //DeletePallet translates a DELETE request to an pallet deletion
-func (palletService *PalletService) DeletePallet(w http.ResponseWriter, r *http.Request){
+func (palletService *PalletService) DeletePallet(w http.ResponseWriter, r *http.Request) {
 	var palletRepo dao.PalletDao
 
 	encoder := json.NewEncoder(w)
@@ -55,7 +54,7 @@ func (palletService *PalletService) DeletePallet(w http.ResponseWriter, r *http.
 	strID := r.URL.Query().Get("id")
 
 	if len(strID) != 0 {
-		id, err := strconv.ParseInt(strID,10,64)
+		id, err := strconv.ParseInt(strID, 10, 64)
 		if err != nil {
 			log.Printf("Invalid id (%s) received for getting a pallet \r\n", strID)
 			w.WriteHeader(http.StatusBadRequest)
@@ -76,7 +75,7 @@ func (palletService *PalletService) DeletePallet(w http.ResponseWriter, r *http.
 }
 
 //PostPallet translates a POST request to a pallet creation
-func (palletService *PalletService) PostPallet(w http.ResponseWriter, r *http.Request){
+func (palletService *PalletService) PostPallet(w http.ResponseWriter, r *http.Request) {
 	var palletRepo dao.PalletDao
 
 	decoder := json.NewDecoder(r.Body)
@@ -86,14 +85,14 @@ func (palletService *PalletService) PostPallet(w http.ResponseWriter, r *http.Re
 
 	err := decoder.Decode(&pallet)
 
-	if err!=nil{
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		encoder.Encode(&Error{Message: "Invalid pallet supplied"})
 		return
 	}
 
 	pallet.ID = 0
-	
+
 	pal, err := palletRepo.SavePallet(pallet)
 
 	encoder.Encode(pal)
@@ -101,7 +100,7 @@ func (palletService *PalletService) PostPallet(w http.ResponseWriter, r *http.Re
 
 //GetPallet translates a GET request to an pallet request from the db
 func (palletService *PalletService) GetPallet(w http.ResponseWriter, r *http.Request) {
-	
+
 	var palletRepo dao.PalletDao
 
 	strID := r.URL.Query().Get("id")
@@ -109,9 +108,9 @@ func (palletService *PalletService) GetPallet(w http.ResponseWriter, r *http.Req
 	encoder := json.NewEncoder(w)
 
 	var pallet *models.Pallet
-	
+
 	if len(strID) != 0 {
-		id, err := strconv.ParseInt(strID,10,64)
+		id, err := strconv.ParseInt(strID, 10, 64)
 		if err != nil {
 			log.Printf("Invalid id (%s) received for getting a pallet \r\n", strID)
 			w.WriteHeader(http.StatusBadRequest)
@@ -124,7 +123,7 @@ func (palletService *PalletService) GetPallet(w http.ResponseWriter, r *http.Req
 		if err != nil {
 			log.Printf("Error retrieving pallet with id %d: %s \r\n", id, err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
-			encoder.Encode(Error{Message: fmt.Sprintf("Internal error: %s", err.Error())})			
+			encoder.Encode(Error{Message: fmt.Sprintf("Internal error: %s", err.Error())})
 			return
 		}
 

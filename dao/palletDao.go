@@ -25,7 +25,7 @@ func (palletDao PalletDao) SavePallet(pallet models.Pallet) (*models.Pallet, err
 		var res sql.Result
 		if pallet.Essence.ID != 0 {
 			res, err = db.Exec("Insert into pallets(essences_id) values(?)", pallet.Essence.ID)
-		}else{
+		} else {
 			res, err = db.Exec("Insert into pallets() values()")
 		}
 		if err != nil {
@@ -37,7 +37,7 @@ func (palletDao PalletDao) SavePallet(pallet models.Pallet) (*models.Pallet, err
 			return nil, err
 		}
 		pallet.ID = id
-		
+
 	} else {
 		_, err = db.Exec("Update pallets set essences_id=? where pallets_id=?", pallet.Essence.ID, pallet.ID)
 		if err != nil {
@@ -52,18 +52,18 @@ func (palletDao PalletDao) SavePallet(pallet models.Pallet) (*models.Pallet, err
 //FindPalletByID finds the pallet with the selected id
 func (palletDao PalletDao) FindPalletByID(id int64) (*models.Pallet, error) {
 	pallet := models.Pallet{}
-	pallet.Essence = models.Essence {}
+	pallet.Essence = models.Essence{}
 	db, err := InitDB()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 	res, err := db.Query("Select p.pallets_id, p.created, e.essences_id,e.name, e.code  from pallets p left outer join essences e on p.essences_id=e.essences_id where pallets_id=?", id)
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if res.Next() {
 		res.Scan(&pallet.ID, &pallet.Created, &pallet.Essence.ID, &pallet.Essence.Name, &pallet.Essence.Code)
 		return &pallet, nil
@@ -71,19 +71,19 @@ func (palletDao PalletDao) FindPalletByID(id int64) (*models.Pallet, error) {
 	return nil, nil
 }
 
-
 //FindPalletsByEssenceID finds the pallets with the selected id
 func (palletDao PalletDao) FindPalletsByEssenceID(id int64) ([]models.Pallet, error) {
 	var pallets []models.Pallet
+	pallets = make([]models.Pallet, 0)
 	db, err := InitDB()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
-	res, err := db.Query("Select p.pallets_id, p.created, e.essences_id,e.name, e.code  from pallets p inner join essences e on p.essences_id=e.essences_id where e.essences.id=?",id)
-	if err!=nil {
+	res, err := db.Query("Select p.pallets_id, p.created, e.essences_id,e.name, e.code  from pallets p inner join essences e on p.essences_id=e.essences_id where e.essences.id=?", id)
+	if err != nil {
 		return nil, err
-	}	
+	}
 	for res.Next() {
 		pallet := models.Pallet{}
 		pallet.Essence = models.Essence{}
@@ -96,15 +96,16 @@ func (palletDao PalletDao) FindPalletsByEssenceID(id int64) ([]models.Pallet, er
 //FindPalletsByEssenceCode finds the pallets with the selected essence code
 func (palletDao PalletDao) FindPalletsByEssenceCode(code string) ([]models.Pallet, error) {
 	var pallets []models.Pallet
+	pallets = make([]models.Pallet, 0)
 	db, err := InitDB()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
-	res, err := db.Query("Select p.pallets_id, p.created, e.essences_id,e.name, e.code  from pallets p inner join essences e on p.essences_id=e.essences_id where e.essences.code=?",code)
-	if err!=nil {
+	res, err := db.Query("Select p.pallets_id, p.created, e.essences_id,e.name, e.code  from pallets p inner join essences e on p.essences_id=e.essences_id where e.essences.code=?", code)
+	if err != nil {
 		return nil, err
-	}	
+	}
 	for res.Next() {
 		pallet := models.Pallet{}
 		pallet.Essence = models.Essence{}
@@ -117,15 +118,16 @@ func (palletDao PalletDao) FindPalletsByEssenceCode(code string) ([]models.Palle
 //FindPalletsByEssenceName finds the pallets with the selected essence name
 func (palletDao PalletDao) FindPalletsByEssenceName(name string) ([]models.Pallet, error) {
 	var pallets []models.Pallet
+	pallets = make([]models.Pallet, 0)
 	db, err := InitDB()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
-	res, err := db.Query("Select p.pallets_id, p.created, e.essences_id,e.name, e.code  from pallets p inner join essences e on p.essences_id=e.essences_id where e.essences.name=?",name)
-	if err!=nil {
+	res, err := db.Query("Select p.pallets_id, p.created, e.essences_id,e.name, e.code  from pallets p inner join essences e on p.essences_id=e.essences_id where e.essences.name=?", name)
+	if err != nil {
 		return nil, err
-	}	
+	}
 	for res.Next() {
 		pallet := models.Pallet{}
 		pallet.Essence = models.Essence{}
@@ -138,15 +140,16 @@ func (palletDao PalletDao) FindPalletsByEssenceName(name string) ([]models.Palle
 //FindAllPallets returns all essences in the system
 func (palletDao PalletDao) FindAllPallets() ([]models.Pallet, error) {
 	var pallets []models.Pallet
+	pallets = make([]models.Pallet, 0)
 	db, err := InitDB()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 	res, err := db.Query("Select p.pallets_id, p.created, e.essences_id,e.name, e.code  from pallets p left outer join essences e on p.essences_id=e.essences_id")
-	if err!=nil {
+	if err != nil {
 		return nil, err
-	}	
+	}
 	for res.Next() {
 		pallet := models.Pallet{}
 		pallet.Essence = models.Essence{}
@@ -157,16 +160,16 @@ func (palletDao PalletDao) FindAllPallets() ([]models.Pallet, error) {
 }
 
 //DeletePalletByID deletes the essence having the passed id
-func (palletDao PalletDao) DeletePalletByID(id int64) (error) {
-	
+func (palletDao PalletDao) DeletePalletByID(id int64) error {
+
 	db, err := InitDB()
 	if err != nil {
-		return  err
+		return err
 	}
 	defer db.Close()
-	_,err = db.Exec("Delete from pallets where pallets_id=?", id)
-	if err!=nil {
+	_, err = db.Exec("Delete from pallets where pallets_id=?", id)
+	if err != nil {
 		return err
-	}	
-	return  nil
+	}
+	return nil
 }
