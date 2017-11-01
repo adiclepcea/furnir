@@ -15,7 +15,7 @@ type PieceDao struct {
 
 //SavePiece will insert or update a piece
 func (pieceDao PieceDao) SavePiece(piece models.Piece) (*models.Piece, error) {
-
+	log.Printf("Save piece: %d\r\n", piece.ID)
 	if piece.PalletsID == 0 {
 		return nil, fmt.Errorf("A piece must have a pallet")
 	}
@@ -76,6 +76,7 @@ func (pieceDao PieceDao) SavePiece(piece models.Piece) (*models.Piece, error) {
 
 //FindPieceByID finds the piece with the selected id
 func (pieceDao PieceDao) FindPieceByID(id int64) (*models.Piece, error) {
+	log.Printf("Find piece by id: %d\r\n", id)
 	piece := models.Piece{}
 	piece.Essence = models.Essence{}
 	piece.Scanned = models.ScannedPiece{}
@@ -111,6 +112,7 @@ func (pieceDao PieceDao) FindPieceByID(id int64) (*models.Piece, error) {
 
 //FindPiecesByBarcode finds the pieces by barcode
 func (pieceDao PieceDao) FindPiecesByBarcode(code string) ([]models.Piece, error) {
+	log.Printf("Find piece by barcode: %s\r\n", code)
 	var pieces []models.Piece
 	pieces = make([]models.Piece, 0)
 	db, err := InitDB()
@@ -144,6 +146,7 @@ func (pieceDao PieceDao) FindPiecesByBarcode(code string) ([]models.Piece, error
 
 //FindPiecesByPalletsID finds the pieces inside the selected pallet
 func (pieceDao PieceDao) FindPiecesByPalletsID(palletsID int64) ([]models.Piece, error) {
+	log.Printf("Find pieces by pallets ID: %d\r\n", palletsID)
 	var pieces []models.Piece
 	pieces = make([]models.Piece, 0)
 	db, err := InitDB()
@@ -177,6 +180,7 @@ func (pieceDao PieceDao) FindPiecesByPalletsID(palletsID int64) ([]models.Piece,
 
 //FindAllPieces returns all pieces in the system
 func (pieceDao PieceDao) FindAllPieces() ([]models.Piece, error) {
+	log.Println("Find all pieces")
 	var pieces []models.Piece
 	pieces = make([]models.Piece, 0)
 
@@ -211,7 +215,7 @@ func (pieceDao PieceDao) FindAllPieces() ([]models.Piece, error) {
 
 //DeletePieceByID deletes the piece having the passed id
 func (pieceDao PieceDao) DeletePieceByID(id int64) error {
-
+	log.Printf("Delete piece by id: %d\r\n", id)
 	db, err := InitDB()
 	if err != nil {
 		return err
@@ -226,6 +230,7 @@ func (pieceDao PieceDao) DeletePieceByID(id int64) error {
 
 //TransferPieceByBarcode will transfer a piece with the giver barcode between two pallets
 func (pieceDao PieceDao) TransferPieceByBarcode(code string, srcPalletID int64, destPalletID int64) error {
+	log.Printf("Transfer piece %s from %d to %d\r\n", code, srcPalletID, destPalletID)
 	var palletRepo PalletDao
 
 	db, err := InitDB()

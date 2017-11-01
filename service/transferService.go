@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log"
 	"encoding/json"
 	"github.com/adiclepcea/furnir/dao"
 	"github.com/adiclepcea/furnir/models"
@@ -35,8 +36,9 @@ func (transferService *TransferService) PostTransfer(w http.ResponseWriter, r *h
 	err := decoder.Decode(&transfer)
 
 	if err != nil {
+		log.Println(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
-		encoder.Encode(&Error{Message: "Invalid transfer supplied"})
+		encoder.Encode(&Error{Message: "Transfer invalid!"})
 		return
 	}
 
@@ -44,13 +46,13 @@ func (transferService *TransferService) PostTransfer(w http.ResponseWriter, r *h
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		encoder.Encode(&Error{Message: "Could not obtain source pallet"})
+		encoder.Encode(&Error{Message: "Nu se poate obtine paletul sursa!"})
 		return
 	}
 
 	if pallet == nil {
 		w.WriteHeader(http.StatusBadRequest)
-		encoder.Encode(&Error{Message: "Source pallet does not exist"})
+		encoder.Encode(&Error{Message: "Paletul sursa nu exista!"})
 		return
 	}
 
@@ -58,24 +60,27 @@ func (transferService *TransferService) PostTransfer(w http.ResponseWriter, r *h
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		encoder.Encode(&Error{Message: "Could not obtain destination pallet"})
+		encoder.Encode(&Error{Message: "Paletul destinatie nu poate fi gasit!"})
 		return
 	}
 
 	if palletDest == nil {
 		w.WriteHeader(http.StatusBadRequest)
-		encoder.Encode(&Error{Message: "Destination pallet does not exist"})
+		encoder.Encode(&Error{Message: "Paletul destinatie nu exista!"})
+		return
+	}
+
+	_, err = models.ScannedPiece{}.NewFromScan(transfer.PieceBarcode)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(&Error{Message: "Pachet invalid!"})
 		return
 	}
 
 	err = pieceRepo.TransferPieceByBarcode(transfer.PieceBarcode, transfer.SourcePalletID, transfer.DestPalletID)
 	if err != nil {
-
-	}
-
-	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		encoder.Encode(&Error{Message: "Could not transfer piece"})
+		encoder.Encode(&Error{Message: "Nu se poate efectua transferul: "+err.Error()})
 		return
 	}
 

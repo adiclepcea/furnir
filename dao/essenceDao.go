@@ -14,7 +14,7 @@ type EssenceDao struct {
 
 //SaveEssence will insert or update an essence
 func (essenceDao EssenceDao) SaveEssence(essence models.Essence) (*models.Essence, error) {
-
+	log.Printf("Saving essence: %s\r\n", essence.Code)
 	db, err := InitDB()
 	if err != nil {
 		return nil, err
@@ -44,6 +44,7 @@ func (essenceDao EssenceDao) SaveEssence(essence models.Essence) (*models.Essenc
 
 //FindEssenceByID finds the sequence with the selected id
 func (essenceDao EssenceDao) FindEssenceByID(id int64) (*models.Essence, error) {
+	log.Printf("Finding essence: %d\r\n", id)
 	essence := models.Essence{}
 	db, err := InitDB()
 	if err != nil {
@@ -65,6 +66,7 @@ func (essenceDao EssenceDao) FindEssenceByID(id int64) (*models.Essence, error) 
 
 //FindEssenceByName finds the sequence with the selected name
 func (essenceDao EssenceDao) FindEssenceByName(name string) (*models.Essence, error) {
+	log.Printf("Find essence by name: %s\r\n", name)
 	essence := models.Essence{}
 	db, err := InitDB()
 	if err != nil {
@@ -86,6 +88,7 @@ func (essenceDao EssenceDao) FindEssenceByName(name string) (*models.Essence, er
 
 //FindEssenceByCode finds the sequence with the selected code
 func (essenceDao EssenceDao) FindEssenceByCode(code string) (*models.Essence, error) {
+	log.Printf("Find essence by code: %s\r\n", code)
 	essence := models.Essence{}
 	db, err := InitDB()
 	if err != nil {
@@ -107,6 +110,7 @@ func (essenceDao EssenceDao) FindEssenceByCode(code string) (*models.Essence, er
 
 //FindAllEssences returns all essences in the system
 func (essenceDao EssenceDao) FindAllEssences() ([]models.Essence, error) {
+	log.Println("Find all essences")
 	var essences []models.Essence
 	essences = make([]models.Essence, 0)
 	db, err := InitDB()
@@ -128,7 +132,7 @@ func (essenceDao EssenceDao) FindAllEssences() ([]models.Essence, error) {
 
 //DeleteEssenceByID deletes the essence having the passed id
 func (essenceDao EssenceDao) DeleteEssenceByID(id int64) error {
-
+	log.Printf("Delete essence: %d\r\n", id)
 	db, err := InitDB()
 	if err != nil {
 		return err

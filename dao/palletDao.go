@@ -14,7 +14,7 @@ type PalletDao struct {
 
 //SavePallet will insert or update a pallet
 func (palletDao PalletDao) SavePallet(pallet models.Pallet) (*models.Pallet, error) {
-
+	log.Printf("Save pallet: %d\r\n", pallet.ID)
 	db, err := InitDB()
 	if err != nil {
 		return nil, err
@@ -51,6 +51,7 @@ func (palletDao PalletDao) SavePallet(pallet models.Pallet) (*models.Pallet, err
 
 //FindPalletByID finds the pallet with the selected id
 func (palletDao PalletDao) FindPalletByID(id int64) (*models.Pallet, error) {
+	log.Printf("Find pallet by id: %d\r\n", id)
 	pallet := models.Pallet{}
 	pallet.Essence = models.Essence{}
 	db, err := InitDB()
@@ -73,6 +74,7 @@ func (palletDao PalletDao) FindPalletByID(id int64) (*models.Pallet, error) {
 
 //FindPalletsByEssenceID finds the pallets with the selected id
 func (palletDao PalletDao) FindPalletsByEssenceID(id int64) ([]models.Pallet, error) {
+	log.Printf("Find pallet by essence id: %d\r\n", id)
 	var pallets []models.Pallet
 	pallets = make([]models.Pallet, 0)
 	db, err := InitDB()
@@ -95,6 +97,7 @@ func (palletDao PalletDao) FindPalletsByEssenceID(id int64) ([]models.Pallet, er
 
 //FindPalletsByEssenceCode finds the pallets with the selected essence code
 func (palletDao PalletDao) FindPalletsByEssenceCode(code string) ([]models.Pallet, error) {
+	log.Printf("Find pallet by essence code: %s\r\n", code)
 	var pallets []models.Pallet
 	pallets = make([]models.Pallet, 0)
 	db, err := InitDB()
@@ -117,6 +120,7 @@ func (palletDao PalletDao) FindPalletsByEssenceCode(code string) ([]models.Palle
 
 //FindPalletsByEssenceName finds the pallets with the selected essence name
 func (palletDao PalletDao) FindPalletsByEssenceName(name string) ([]models.Pallet, error) {
+	log.Printf("Find pallets by essence name: %s\r\n", name)
 	var pallets []models.Pallet
 	pallets = make([]models.Pallet, 0)
 	db, err := InitDB()
@@ -139,6 +143,7 @@ func (palletDao PalletDao) FindPalletsByEssenceName(name string) ([]models.Palle
 
 //FindAllPallets returns all essences in the system
 func (palletDao PalletDao) FindAllPallets() ([]models.Pallet, error) {
+	log.Println("Find all pallets")
 	var pallets []models.Pallet
 	pallets = make([]models.Pallet, 0)
 	db, err := InitDB()
@@ -161,7 +166,7 @@ func (palletDao PalletDao) FindAllPallets() ([]models.Pallet, error) {
 
 //DeletePalletByID deletes the essence having the passed id
 func (palletDao PalletDao) DeletePalletByID(id int64) error {
-
+	log.Printf("Delete pallet by id: %d\r\n", id)
 	db, err := InitDB()
 	if err != nil {
 		return err

@@ -80,7 +80,8 @@
                 props: ['pallet','scanneditem'],
                 data: function(){
                     return {
-                        items: new Array()
+                        items: new Array(),
+                        palletid: null
                     };
                 },
                 created: function(){
@@ -89,27 +90,45 @@
                 },
                 watch:{
                     pallet : function(val){
-                        this.initialize();                               
-                        axios.get("/piece?pallet_id="+val)
-                            .then(r => {
-                            for(i=0;i<r.data.length;i++){
-                                this.items.push(r.data[i].barcode);
-                            }                                
-                            })
-                            .catch(function(err){
-                                this.items = [];
-                                alert(err);
-                            });
-                        },
-                        scanneditem: function(val){
-                            //alert(val);
-                        }
+                        this.palletid=val;
+                        this.populate();                               
+                    },
+                    scanneditem: function(val){
+                        if(val!=0){
+                            this.populate();
+                        }                        
+                    }
                 },
                 methods:{
                     initialize: function(){
                         console.log("Initialized")
                         this.items = new Array();
                         //this.pallet = null;                        
+                    },
+                    populate: function(){
+                        this.initialize();
+                        if(!this.palletid){
+                            return;
+                        }
+                        console.log("Src pallet: "+this.palletid)
+                        axios.get("/piece?pallet_id="+this.palletid)
+                            .then(r => {
+                                console.log(r.data);
+                                for(i=0;i<r.data.length;i++){
+                                    this.items.push(r.data[i].barcode);
+                                }     
+                                this.$forceUpdate();        
+                            })
+                            .catch(function(err){
+                                this.items = [];
+                                if(error.response &&
+                                    error.response.data &&
+                                    error.response.data.message){
+                                    alert(error.response.data.message)
+                                }else{
+                                    alert(error);
+                                }
+                            });
                     }
                 }
             });
@@ -119,7 +138,8 @@
                 props: ['pallet','scanneditem','resetdest'],  
                 data: function(){
                     return {
-                        items: new Array()
+                        items: new Array(),
+                        palletid:null
                     };
                 },
                 created: function(){
@@ -127,26 +147,13 @@
                 },
                 watch:{
                     pallet : function(val){
-                        this.initialize(); 
-                        if(this.pallet==null){
-                            return;
-                        }
-                        axios.get("/piece?pallet_id="+val)
-                            .then(r => {
-                            for(i=0;i<r.data.length;i++){
-                                this.items.push(r.data[i].barcode);
-                            }                                
-                            })
-                            .catch(function(err){
-                                this.items = [];
-                                alert(err);
-                            });
-                              
+                        this.palletid = val;
+                        this.populate();
                     },
                     scanneditem: function(val){ 
-                        console.log(val);                           
-                        this.items.push(val);
-                        console.log(this.items);
+                        if(val!=0){
+                            this.populate();
+                        }
                     }
                 
                 },
@@ -155,6 +162,30 @@
                         console.log("Initialized")
                         this.items = new Array();
                         //this.pallet = null;                        
+                    },
+                    populate: function(){
+                        this.initialize(); 
+                        if(this.palletid==null){
+                            return;
+                        }
+                        axios.get("/piece?pallet_id="+this.palletid)
+                            .then(r => {
+                                console.log(r.data);
+                                for(i=0;i<r.data.length;i++){
+                                    this.items.push(r.data[i].barcode);
+                                }              
+                                this.$forceUpdate();
+                            })
+                            .catch(function(err){
+                                this.items = [];
+                                if(error.response &&
+                                    error.response.data &&
+                                    error.response.data.message){
+                                    alert(error.response.data.message)
+                                }else{
+                                    alert(error);
+                                }
+                            });
                     }
                     /*showitems: function(){
                         console.log(this.items);
@@ -242,10 +273,30 @@
                     hideMaterials: function(){
                         this.materialsVisible = false;
                     },
-                    transfer: function(item){
+                    transfer: function(item){                        
                         if(this.source_pallet && this.dest_pallet){
                             console.log("Mut itemul "+item+" din "+this.source_pallet+" in "+this.dest_pallet);
-                            this.scanneditem = item;
+                            me = this;
+                            me.scanneditem = 0;
+                            axios.post(
+                                "/transfer",
+                                {
+                                    source_pallet_id: Number(this.source_pallet),
+                                    dest_pallet_id: Number(this.dest_pallet),
+                                    piece: item
+                                }
+                            ).then(function(response){                                
+                                me.scanneditem = item;
+                                me.$forceUpdate();      
+                            }).catch(function(error){
+                                if(error.response &&
+                                    error.response.data &&
+                                    error.response.data.message){
+                                    alert(error.response.data.message)
+                                }else{
+                                    alert(error);
+                                }
+                            });
                         }else{
                             alert("Trebuie sa aveti alese atat paletul sursa cat si cel destinatie!");
                         }
@@ -255,6 +306,7 @@
                         
                         axios.post("/pallet",{id:0,essence:{id:this.material}})
                             .then(r=>{
+                                alert(JSON.stringify(r.data));
                                 this.inputvalue=this.material;                                
                                 this.flagPaletNou = false;
                                 this.$forceUpdate();                                
@@ -262,7 +314,13 @@
                             }                            
                             )
                             .catch(function(error){
-                                alert(error);
+                                if(error.response && 
+                                    error.response.data &&
+                                    error.response.data.message){
+                                    alert(error.response.data.message)
+                                }else{
+                                    alert(error);
+                                }
                             });
                     }
                     ,
@@ -340,7 +398,13 @@
                                         value.parent.$forceUpdate();
                                     })
                                     .catch(function(err){
-                                        alert(err);
+                                        if(error.response && 
+                                            error.response.data &&
+                                            error.response.data.message){
+                                            alert(error.response.data.message)
+                                        }else{
+                                            alert(error);
+                                        }
                                     });                                    
                                 }
                             }
@@ -368,7 +432,13 @@
                                         value.parent.$forceUpdate();
                                     })
                                     .catch(function(err){
-                                        alert(err);
+                                        if(error.response && 
+                                            error.response.data &&
+                                            error.response.data.message){
+                                            alert(error.response.data.message)
+                                        }else{
+                                            alert(error);
+                                        }
                                     });                                    
                                 }
                             }
