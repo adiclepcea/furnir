@@ -7,9 +7,26 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "github.com/boombuler/barcode",
+			"Rev": "3cfea5ab600ae37946be2b763b8ec2c1cf2d272d"
+		},
+		{
+			"ImportPath": "github.com/boombuler/barcode/code128",
+			"Rev": "3cfea5ab600ae37946be2b763b8ec2c1cf2d272d"
+		},
+		{
+			"ImportPath": "github.com/boombuler/barcode/utils",
+			"Rev": "3cfea5ab600ae37946be2b763b8ec2c1cf2d272d"
+		},
+		{
 			"ImportPath": "github.com/go-sql-driver/mysql",
 			"Comment": "v1.3-34-gbe22b30",
 			"Rev": "be22b3051b3467094e9908389d900e74f72cf08f"
+		},
+		{
+			"ImportPath": "github.com/jung-kurt/gofpdf",
+			"Comment": "v1.0.0-22-g9abfbb9",
+			"Rev": "9abfbb92974aff5a2c689299dafb4d020a0afab2"
 		}
 	]
 }
