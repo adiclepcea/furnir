@@ -17,6 +17,7 @@
                 <ul class="nav navbar-nav">
                     <li class="active"><a href="#">Mutare furnir</a></li>
                     <li><a href="#">Rapoarte</a></li>
+                    <li onclick="printOperations()"><a href="#">Imprima operatii</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <li><div class="navar-header">
@@ -209,9 +210,17 @@
                             message: "ssss"
                         }
                     },
-                    confirmStep:function(){                        
+                    confirmStep:function(){         
+                        this.message = "";               
                         console.log("*********************"+this.inputvalue);
-                        if(this.inputvalue=="palet nou"){
+                        if(this.inputvalue=="print dest"){
+                            this.printPallet(this.dest_pallet);
+                            this.inputvalue = "";
+                        }
+                        else if(this.inputvalue=="print sursa"){
+                            this.printPallet(this.source_pallet);                            
+                            this.inputvalue = "";
+                        }else if(this.inputvalue=="palet nou"){
                             this.essences = [];
                             this.showMaterials();
                             this.flagPaletNou = true;
@@ -219,10 +228,17 @@
                             if(this.flagPaletNou){
                                 console.log(this.flagPaletNou);
                                 var found = false;
+                                var ess = this.inputvalue;
+                                if(!ess.indexOf("-")){
+                                    this.message = "Invalid essence selected";
+                                    return;
+                                }
+                                
+                                ess = ess.substr(ess.indexOf("-")+1).trim()
                                 //search for new pallet essence choice
                                 for(i=0;i<this.essences.length;i++){
                                     essence = this.essences[i];
-                                    if(essence.id==this.inputvalue){
+                                    if(essence.id==ess){
                                         this.material = essence.id;
                                         found=true;
                                         break;
@@ -241,6 +257,9 @@
                         }
                         //if we do not have a new command, we perform our task
                         if(!arrContains(Object.keys(this.steps),this.inputvalue)){
+                            if(this.inputvalue == ""){
+                                return;
+                            }
                             if(!this.step.checkValidity(this.inputvalue)){
                                 alert("Valoare invalida");
                                 return;
@@ -306,18 +325,17 @@
                         
                         axios.post("/pallet",{id:0,essence:{id:this.material}})
                             .then(r=>{
-                                alert(JSON.stringify(r.data));
                                 this.inputvalue=this.material;                                
                                 this.flagPaletNou = false;
                                 this.$forceUpdate();                                
-                                this.confirmStep();                                
-                            }                            
-                            )
+                                this.confirmStep();
+                                window.open("/pallet?print="+r.data.id,"_blank");
+                            })
                             .catch(function(error){
                                 if(error.response && 
                                     error.response.data &&
                                     error.response.data.message){
-                                    alert(error.response.data.message)
+                                    this.message = error.response.data.message;
                                 }else{
                                     alert(error);
                                 }
@@ -331,6 +349,14 @@
                         this.inputvalue = "";
                         //this.material="dddd";
                         
+                    },
+                    printPallet: function(pallet){
+                        if(!pallet){
+                            this.message = "Nu ati selectat paletul";
+                            return;
+                        }else{
+                            window.open("/pallet?print="+pallet,"_blank");
+                        }
                     }
                 },                                
                 created: function(){                                        
@@ -401,7 +427,8 @@
                                         if(error.response && 
                                             error.response.data &&
                                             error.response.data.message){
-                                            alert(error.response.data.message)
+                                            value.parent.message=error.response.data.message;
+                                            value.parent.$forceUpdate();
                                         }else{
                                             alert(error);
                                         }
@@ -435,14 +462,15 @@
                                         if(error.response && 
                                             error.response.data &&
                                             error.response.data.message){
-                                            alert(error.response.data.message)
+                                            value.parent.message=error.response.data.message;
+                                            value.parent.$forceUpdate();
                                         }else{
                                             alert(error);
                                         }
                                     });                                    
                                 }
                             }
-                        },
+                        }
                     },
                     data:{
                         inputValue: function(){
@@ -455,7 +483,7 @@
                 
             window.onload=onLoad;
             function onLoad(){                
-
+                document.getElementById("source").focus();
             }
 
             function arrContains(arr,value){
@@ -466,6 +494,9 @@
                     }
                 }
                 return false;
+            }
+            function printOperations(){
+                window.open("/operations","_blank");
             }
         </script>
     </body>

@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/adiclepcea/furnir/dao"
 	"github.com/adiclepcea/furnir/models"
+	"github.com/adiclepcea/furnir/pdf"	
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"strconv"
 )
 
@@ -26,6 +28,32 @@ type EssenceService struct {
 func NewEssenceService(essenceRepo dao.EssenceDao) EssenceService {
 	es := EssenceService{essenceRepo: essenceRepo}
 	return es
+}
+
+//PrintEssences generates a PDF with the barcodes used for essences
+func PrintEssences(w http.ResponseWriter, r *http.Request) {
+	var essenceRepo dao.EssenceDao
+
+	encoder := json.NewEncoder(w)
+
+	w.Header().Add("Content-type","application/pdf")
+	essences, err := essenceRepo.FindAllEssences()
+
+	if err != nil {
+		log.Printf("Error retrieving essences %s \r\n", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		encoder.Encode(Error{Message: fmt.Sprintf("Internal error: %s", err.Error())})
+		return
+	}
+
+	var essencesStr []string
+	
+	for _, ess :=  range essences {
+		essencesStr = append(essencesStr,fmt.Sprintf("%s - %d",ess.Name,ess.ID))
+	}
+
+	encoder.Encode(essences)
+	pdf.GenerateSimplePDF(essencesStr, "Esente", httputil.NewChunkedWriter(w))	
 }
 
 //PutEssence translates a PUT request to an essence modification
@@ -111,6 +139,7 @@ func (essenceService *EssenceService) GetEssence(w http.ResponseWriter, r *http.
 	strID := r.URL.Query().Get("id")
 	code := r.URL.Query().Get("code")
 	name := r.URL.Query().Get("name")
+	prnt := r.URL.Query().Get("print")
 
 	encoder := json.NewEncoder(w)
 
@@ -153,7 +182,10 @@ func (essenceService *EssenceService) GetEssence(w http.ResponseWriter, r *http.
 			encoder.Encode(Error{Message: fmt.Sprintf("Internal error: %s", err.Error())})
 			return
 		}
-	} else {
+	} else if len(prnt)!=0 {
+		PrintEssences(w,r)
+		return
+	}else {
 		//return all essences
 		essences, err := essenceRepo.FindAllEssences()
 

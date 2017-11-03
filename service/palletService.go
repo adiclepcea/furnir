@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/adiclepcea/furnir/dao"
 	"github.com/adiclepcea/furnir/models"
+	"github.com/adiclepcea/furnir/pdf"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"strconv"
 )
 
@@ -102,8 +104,10 @@ func (palletService *PalletService) PostPallet(w http.ResponseWriter, r *http.Re
 func (palletService *PalletService) GetPallet(w http.ResponseWriter, r *http.Request) {
 
 	var palletRepo dao.PalletDao
+	var pieceRepo dao.PieceDao
 
 	strID := r.URL.Query().Get("id")
+	strPrintID := r.URL.Query().Get("print")
 
 	encoder := json.NewEncoder(w)
 
@@ -127,6 +131,31 @@ func (palletService *PalletService) GetPallet(w http.ResponseWriter, r *http.Req
 			return
 		}
 
+	} else if len(strPrintID)!=0 { 
+		palletID, err := strconv.ParseInt(strPrintID, 10, 64)
+		if err != nil {
+			log.Printf("Invalid id (%s) received for getting a pallet \r\n", strID)
+			w.WriteHeader(http.StatusBadRequest)
+			encoder.Encode(Error{Message: fmt.Sprintf("Invalid id: %s", strID)})
+			return
+		}
+		pallet, err := palletRepo.FindPalletByID(palletID)
+		if err != nil {
+			log.Printf("Error retrieving pallet with id %d: %s \r\n", palletID, err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			encoder.Encode(Error{Message: fmt.Sprintf("Internal error: %s", err.Error())})
+			return
+		}
+		pieces, err := pieceRepo.FindPiecesByPalletsID(palletID)
+		
+		w.Header().Add("Content-type","application/pdf")
+		err = pdf.GeneratePalletPDF(*pallet,pieces,httputil.NewChunkedWriter(w))
+		if err != nil {
+			log.Printf("Error generating pdf: %s \r\n", err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			encoder.Encode(Error{Message: fmt.Sprintf("Internal error: %s", err.Error())})
+			return
+		}
 	} else {
 		//return all pallets
 		pallets, err := palletRepo.FindAllPallets()

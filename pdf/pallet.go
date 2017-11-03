@@ -5,6 +5,7 @@ import (
 	"github.com/boombuler/barcode"
 	"log"
 	"fmt"
+	"io"
 	"image/jpeg"
 	"bytes"
 	"github.com/adiclepcea/furnir/models"
@@ -12,7 +13,7 @@ import (
 )
 
 //GeneratePalletPDF will generate a PDF containing data about the selected pallet
-func GeneratePalletPDF(pallet models.Pallet, pieces []models.Piece){
+func GeneratePalletPDF(pallet models.Pallet, pieces []models.Piece, w io.WriteCloser ) error{
 	
 	bc,err := code128.Encode(fmt.Sprintf("%012d",pallet.ID))
 	if err!=nil{
@@ -57,11 +58,5 @@ func GeneratePalletPDF(pallet models.Pallet, pieces []models.Piece){
 		pdf.Ln(3)
 	}
 
-	err = pdf.OutputFileAndClose("/home/adi/golang/src/github.com/adiclepcea/furnir/out.pdf")
-	if err!=nil {
-		fmt.Println(err.Error())
-	}else{
-		fmt.Println("OK")
-
-	}
+	return pdf.OutputAndClose(w)
 }
