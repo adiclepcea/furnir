@@ -6,6 +6,11 @@
         <script src="./js/bootstrap.min.js" ></script>
         <script src="./js/vue.js"></script>
         <script src="./js/axios.min.js"></script>
+        <style>
+            .selected {
+                background-color: #AAAAAA;
+            }
+        </style>
     </head>
 
     <body onload="onLoad()")>
@@ -35,25 +40,42 @@
             </div>
         </div>
         <script type="text/x-template" id="pallet-transfer-wizard-template">
-            <div>                
+            <div style="margin:0; padding:0">                
                 <div class="pane" id="header" style="text-align:center">                
                     <div v-if="this.message" style="color:red"><h2>{{this.message}}</h2></div>
                     <div><h1>{{this.step.prompt}}</h1></div>                    
-                    <input type="text" autofocus id="source" v-on:keyup.enter="confirmStep" v-model="inputvalue"/>      
+                    <input type="text" autofocus id="source" ref="source" v-on:keyup.enter="confirmStep" v-model="inputvalue"/>      
                                                    
                     <select v-if="this.materialsVisible" v-on:change="createPallet" id="material" name="material" v-model="material">
-                            <option v-for="essence in essences" v-bind:value="essence.id">
-                                    {{ essence.name }}
-                            </option>        
+                        <option v-for="essence in essences" v-bind:value="essence.id">
+                            {{ essence.name }}
+                        </option>        
                     </select>
                     <span v-if="this.materialsVisible">{{this.material}}</span>
                 </div>
-                <div class="row">
-                    <div class="col-sm-6">
-                        <palet-sursa v-bind:pallet="source_pallet" v-bind:scanneditem="this.scanneditem"></palet-sursa>
-                    </div>
-                    <div class="col-sm-6">
-                        <palet-dest v-bind:pallet="dest_pallet" v-bind:scanneditem="this.scanneditem"></palet-dest>
+                <div class="row" style="margin:0; padding:0">
+                    <div class="col-sm-12" style="margin:0; padding:0">
+                        <div class="col-sm-4" style="margin:0; padding:0">
+                            <palet-sursa v-bind:pallet="source_pallet" v-bind:scanneditem="this.scanneditem"></palet-sursa>
+                        </div>
+                        <div class="col-sm-8" style="margin:0; padding:0">
+                            <div class="row" style="margin:0;padding:0">
+                                <div class="col-sm-12" style="margin:0; padding:0">
+                                    <div class="col-sm-3" v-bind:class="{selected:this.dest_index==0}" style="margin:0;padding:0">
+                                        <palet-dest v-bind:pallet="dest_pallet[0]" v-on:selectMe="selectIndex(0)" v-bind:scanneditem="this.scanneditem"></palet-dest>
+                                    </div>
+                                    <div class="col-sm-3" v-bind:class="{selected:this.dest_index==1}" style="margin:0;padding:0">
+                                        <palet-dest v-bind:pallet="dest_pallet[1]" v-on:selectMe="selectIndex(1)" v-bind:scanneditem="this.scanneditem"></palet-dest>
+                                    </div>
+                                    <div class="col-sm-3" v-bind:class="{selected:this.dest_index==2}" style="margin:0;padding:0">
+                                        <palet-dest v-bind:pallet="dest_pallet[2]" v-on:selectMe="selectIndex(2)" v-bind:scanneditem="this.scanneditem"></palet-dest>
+                                    </div>
+                                    <div class="col-sm-3" v-bind:class="{selected:this.dest_index==3}" style="margin:0;padding:0">
+                                        <palet-dest v-bind:pallet="dest_pallet[3]" v-on:selectMe="selectIndex(3)" v-bind:scanneditem="this.scanneditem"></palet-dest>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -71,10 +93,13 @@
 
         <script type="text/x-template" id="dest-pallet-template">            
             <div>
-                <div class="alert alert-info"style="font-size:20px">Palet dest <span v-if="pallet!=null">{{pallet}}</span> </div>
-                <div v-if="pallet!=null">
+                <div class="alert alert-info col-sm-12" style="font-size:20px">
+                    Plt dst <span v-if="pallet!=null">{{pallet}}</span> 
+                    <button style="font-size:11px;float:right" v-on:click="selectMe">Sel</button>
+                </div>                        
+                <div class="col-sm-12" v-if="pallet!=null">
                     <div v-for="item in items">{{item}}</div>                    
-                </div>
+                </div>                
             </div>
         </script>
 
@@ -162,6 +187,9 @@
                 
                 },
                 methods: {
+                    selectMe: function(){
+                        this.$emit('selectMe');
+                    },
                     initialize: function(){
                         console.log("Initialized")
                         this.items = new Array();
@@ -199,11 +227,12 @@
 
             Vue.component('pallet-transfer-wizard',{
                 template: "#pallet-transfer-wizard-template",
-                props:['steps','test','inputvalue'],
+                props:['dest_index','steps','test','inputvalue'],
                 methods: {
                     data: function(){
                         return {
-                            dest_pallet:null,
+                            dest_pallet:[null,null,null,null],
+                            dest_index:null,
                             source_pallet:null,
                             scanneditem: null,
                             materialsVisible: false,
@@ -213,14 +242,41 @@
                             message: "ssss"
                         }
                     },
+                    selectIndex: function(ix){
+                        this.message = "";   
+                        if(this.dest_pallet && this.dest_pallet[ix]){
+                            this.dest_index=ix;
+                            this.inputvalue = "";                        
+                        } else {
+                            this.inputvalue = "palet dest"+(ix+1);
+                            this.confirmStep();
+                            this.$refs.source.focus();
+                        }
+                    },
                     confirmStep:function(){         
                         this.message = "";               
                         console.log("*********************"+this.inputvalue);
-                        if(this.inputvalue=="print dest"){
-                            this.printPallet(this.dest_pallet);
+                        if(this.inputvalue=="print dest1"){
+                            this.printPallet(this.dest_pallet[0]);
                             this.inputvalue = "";
-                        }
-                        else if(this.inputvalue=="print sursa"){
+                        }else if(this.inputvalue=="print dest2"){
+                            this.printPallet(this.dest_pallet[1]);
+                            this.inputvalue = "";
+                        }else if(this.inputvalue=="print dest3"){
+                            this.printPallet(this.dest_pallet[2]);
+                            this.inputvalue = "";
+                        }else if(this.inputvalue=="print dest4"){
+                            this.printPallet(this.dest_pallet[3]);
+                            this.inputvalue = "";
+                        }else if(this.inputvalue=="sel dest1"){
+                            this.selectIndex(0);
+                        }else if(this.inputvalue=="sel dest2"){
+                            this.selectIndex(1);
+                        }else if(this.inputvalue=="sel dest3"){
+                            this.selectIndex(2);
+                        }else if(this.inputvalue=="sel dest4"){
+                            this.selectIndex(3);
+                        }else if(this.inputvalue=="print sursa"){
                             this.printPallet(this.source_pallet);                            
                             this.inputvalue = "";
                         }else if(this.inputvalue=="palet nou"){
@@ -296,15 +352,15 @@
                         this.materialsVisible = false;
                     },
                     transfer: function(item){                        
-                        if(this.source_pallet && this.dest_pallet){
-                            console.log("Mut itemul "+item+" din "+this.source_pallet+" in "+this.dest_pallet);
+                        if(this.source_pallet && (this.dest_index || this.dest_index==0)){
+                            console.log("Mut itemul "+item+" din "+this.source_pallet+" in "+this.dest_pallet[this.dest_index]);
                             me = this;
-                            me.scanneditem = 0;
+                            me.scanneditem = 0;                            
                             axios.post(
                                 "/transfer",
                                 {
                                     source_pallet_id: Number(this.source_pallet),
-                                    dest_pallet_id: Number(this.dest_pallet),
+                                    dest_pallet_id: Number(this.dest_pallet[this.dest_index]),
                                     piece: item
                                 }
                             ).then(function(response){                                
@@ -320,7 +376,7 @@
                                 }
                             });
                         }else{
-                            alert("Trebuie sa aveti alese atat paletul sursa cat si cel destinatie!");
+                            alert("Trebuie sa aveti alese atat paletul sursa cat si cel destinatie!"+this.dest_index);
                         }
                     }
                     ,
@@ -348,11 +404,12 @@
                     initialize: function(){
                         this.step = this.steps["palet sursa"];
                         this.source_pallet = null;                    
-                        this.dest_pallet = null;
+                        this.dest_pallet = Array();
+                        this.dest_index = null;
                         this.inputvalue = "";
                         //this.material="dddd";
                         
-                    },
+                    },                    
                     printPallet: function(pallet){
                         if(!pallet){
                             this.message = "Nu ati selectat paletul";
@@ -439,42 +496,11 @@
                                 }
                             }
                         },
-                        "palet dest":{
-                            prompt: "Alege palet dest",
-                            type: "palet desti", 
-                            okMesaj: "Palet destinatie ales", 
-                            cancelMsg: "Alegere palet destinatie anulata",
-                            followedBy: ["palet nou"],
-                            checkValidity: function(value){
-                                return true;
-                            },
-                            perform: function(value){
-                                if(value){        
-                                    axios.get("/pallet?id="+value.input)
-                                    .then(r => {                                        
-                                        if(!r.data.hasOwnProperty("id")){
-                                            value.parent.message="Paletul "+value.input+" nu exista!";
-                                            value.parent.$forceUpdate();
-                                            return;
-                                        }
-                                        value.parent.message = null;
-                                        value.parent.dest_pallet = value.input;
-                                        value.parent.$forceUpdate();
-                                    })
-                                    .catch(function(err){
-                                        if(error.response && 
-                                            error.response.data &&
-                                            error.response.data.message){
-                                            value.parent.message=error.response.data.message;
-                                            value.parent.$forceUpdate();
-                                        }else{
-                                            alert(error);
-                                        }
-                                    });                                    
-                                }
-                            }
-                        }
-                    },
+                        "palet dest1":palletDest(0),
+                        "palet dest2":palletDest(1),
+                        "palet dest3":palletDest(2),
+                        "palet dest4":palletDest(3)
+                    },                       
                     data:{
                         inputValue: function(){
                             return "";
@@ -522,6 +548,48 @@
                 document.getElementById("manage").style.display="none";
                 document.getElementById("mnuMutare").classList.add("active");
             }
+
+            function palletDest(ix){
+                var d = {
+                    prompt: "Alege palet dest "+(ix+1),
+                    type: "palet desti", 
+                    okMesaj: "Palet destinatie ales", 
+                    cancelMsg: "Alegere palet destinatie anulata",
+                    followedBy: ["palet nou"],
+                    index: ix,
+                    checkValidity: function(value){
+                        return true;
+                    },
+                    perform: function(value){
+                        if(value){        
+                            axios.get("/pallet?id="+value.input)
+                            .then(r => {                                        
+                                if(!r.data.hasOwnProperty("id")){
+                                    value.parent.message="Paletul "+value.input+" nu exista!";
+                                    value.parent.$forceUpdate();
+                                    return;
+                                }
+                                value.parent.message = null;
+                                value.parent.dest_pallet[ix] = value.input;
+                                value.parent.dest_index = ix;
+                                value.parent.$forceUpdate();
+                            })
+                            .catch(function(error){
+                                if(error.response && 
+                                    error.response.data &&
+                                    error.response.data.message){
+                                    value.parent.message=error.response.data.message;
+                                    value.parent.$forceUpdate();
+                                }else{
+                                    alert(error);
+                                }
+                            });                                    
+                        }
+                    }
+                };
+                return d;
+            }
+            
         </script>
     </body>
 

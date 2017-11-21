@@ -53,7 +53,7 @@ func GeneratePalletPDF(pallet models.Pallet, pieces []models.Piece, w io.WriteCl
 		imgName:=fmt.Sprintf("piece%d",piece.ID)
 		pdf.RegisterImageOptionsReader(imgName,io,bytes.NewReader(buf.Bytes()))
 		pdf.ImageOptions(imgName,-1,-1,0,0,true,io,0,"")
-		pdf.WriteAligned(0,-2,fmt.Sprintf("%s, L=%d, l=%d, Foi=%d",piece.Scanned.Code,piece.Scanned.Length,piece.Scanned.Width, piece.Scanned.SheetCount),"R")
+		pdf.WriteAligned(0,-2,fmt.Sprintf("%s,P=%d, L=%d, l=%d, Foi=%d",piece.Scanned.Code,piece.Scanned.OriginalPallet,piece.Scanned.Length,piece.Scanned.Width, piece.Scanned.SheetCount),"R")
 		pdf.Line(10,pdf.GetY()+1,200,pdf.GetY()+1)
 		pdf.Ln(3)
 	}

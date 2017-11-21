@@ -28,22 +28,24 @@ func (pieceDao PieceDao) SavePiece(piece models.Piece) (*models.Piece, error) {
 	if piece.ID == 0 {
 		var res sql.Result
 		if piece.Essence.ID != 0 {
-			res, err = db.Exec("Insert into pieces(pallets_id, essences_id,barcode,code,length,width,sheets) values(?,?,?,?,?,?,?)",
+			res, err = db.Exec("Insert into pieces(pallets_id, essences_id,barcode,code,length,width,sheets,pallet) values(?,?,?,?,?,?,?,?)",
 				piece.PalletsID,
 				piece.Essence.ID,
 				piece.Barcode,
 				piece.Scanned.Code,
 				piece.Scanned.Length,
 				piece.Scanned.Width,
-				piece.Scanned.SheetCount)
+				piece.Scanned.SheetCount,
+				piece.Scanned.OriginalPallet)
 		} else {
-			res, err = db.Exec("Insert into pieces(pallets_id, barcode,code, length, width, sheets) values(?,?,?,?,?,?)",
+			res, err = db.Exec("Insert into pieces(pallets_id, barcode,code, length, width, sheets,pallet) values(?,?,?,?,?,?,?)",
 				piece.PalletsID,
 				piece.Barcode,
 				piece.Scanned.Code,
 				piece.Scanned.Length,
 				piece.Scanned.Width,
-				piece.Scanned.SheetCount)
+				piece.Scanned.SheetCount,
+				piece.Scanned.OriginalPallet)
 		}
 		if err != nil {
 			log.Printf("Error saving piece: %s\r\n", err.Error())
@@ -56,7 +58,7 @@ func (pieceDao PieceDao) SavePiece(piece models.Piece) (*models.Piece, error) {
 		piece.ID = id
 
 	} else {
-		_, err = db.Exec("Update pieces set pallets_id=?, essences_id=?, barcode=?,code=?, length=?, width=?, sheets=? where pieces_id=?",
+		_, err = db.Exec("Update pieces set pallets_id=?, essences_id=?, barcode=?,code=?, length=?, width=?, sheets=?,pallet=? where pieces_id=?",
 			piece.PalletsID,
 			piece.Essence.ID,
 			piece.Barcode,
@@ -64,6 +66,7 @@ func (pieceDao PieceDao) SavePiece(piece models.Piece) (*models.Piece, error) {
 			piece.Scanned.Length,
 			piece.Scanned.Width,
 			piece.Scanned.SheetCount,
+			piece.Scanned.OriginalPallet,
 			piece.ID)
 		if err != nil {
 			log.Printf("Error saving piece: %s\r\n", err.Error())
@@ -85,7 +88,7 @@ func (pieceDao PieceDao) FindPieceByID(id int64) (*models.Piece, error) {
 		return nil, err
 	}
 	defer db.Close()
-	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets, e.essences_id, e.name, e.code  
+	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets,p.pallet, e.essences_id, e.name, e.code  
 		from pieces p left outer join essences e on p.essences_id=e.essences_id where pieces_id=?`, id)
 
 	if err != nil {
@@ -100,6 +103,7 @@ func (pieceDao PieceDao) FindPieceByID(id int64) (*models.Piece, error) {
 			&piece.Scanned.Length,
 			&piece.Scanned.Width,
 			&piece.Scanned.SheetCount,
+			&piece.Scanned.OriginalPallet,
 			&piece.Essence.ID,
 			&piece.Essence.Name,
 			&piece.Essence.Code)
@@ -120,7 +124,7 @@ func (pieceDao PieceDao) FindPiecesByBarcode(code string) ([]models.Piece, error
 		return nil, err
 	}
 	defer db.Close()
-	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets, e.essences_id, e.name, e.code  
+	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets,p.pallet, e.essences_id, e.name, e.code  
 		from pieces p left outer join essences e on p.essences_id=e.essences_id where p.barcode=?`, code)
 	if err != nil {
 		return nil, err
@@ -136,6 +140,7 @@ func (pieceDao PieceDao) FindPiecesByBarcode(code string) ([]models.Piece, error
 			&piece.Scanned.Length,
 			&piece.Scanned.Width,
 			&piece.Scanned.SheetCount,
+			&piece.Scanned.OriginalPallet,
 			&piece.Essence.ID,
 			&piece.Essence.Name,
 			&piece.Essence.Code)
@@ -154,7 +159,7 @@ func (pieceDao PieceDao) FindPiecesByPalletsID(palletsID int64) ([]models.Piece,
 		return nil, err
 	}
 	defer db.Close()
-	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets, e.essences_id, e.name, e.code  
+	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets,p.pallet, e.essences_id, e.name, e.code  
 		from pieces p left outer join essences e on p.essences_id=e.essences_id where p.pallets_id=?`, palletsID)
 	if err != nil {
 		return nil, err
@@ -170,6 +175,7 @@ func (pieceDao PieceDao) FindPiecesByPalletsID(palletsID int64) ([]models.Piece,
 			&piece.Scanned.Length,
 			&piece.Scanned.Width,
 			&piece.Scanned.SheetCount,
+			&piece.Scanned.OriginalPallet,
 			&piece.Essence.ID,
 			&piece.Essence.Name,
 			&piece.Essence.Code)
@@ -189,7 +195,7 @@ func (pieceDao PieceDao) FindAllPieces() ([]models.Piece, error) {
 		return nil, err
 	}
 	defer db.Close()
-	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets, e.essences_id, e.name, e.code  
+	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets,p.pallet, e.essences_id, e.name, e.code  
 		from pieces p left outer join essences e on p.essences_id=e.essences_id`)
 	if err != nil {
 		return nil, err
@@ -205,6 +211,7 @@ func (pieceDao PieceDao) FindAllPieces() ([]models.Piece, error) {
 			&piece.Scanned.Length,
 			&piece.Scanned.Width,
 			&piece.Scanned.SheetCount,
+			&piece.Scanned.OriginalPallet,
 			&piece.Essence.ID,
 			&piece.Essence.Name,
 			&piece.Essence.Code)
@@ -251,7 +258,7 @@ func (pieceDao PieceDao) TransferPieceByBarcode(code string, srcPalletID int64, 
 		return err
 	}
 
-	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets, e.essences_id, e.name, e.code  
+	res, err := db.Query(`Select p.pieces_id, p.pallets_id, p.barcode, p.code, p.length, p.width,p.sheets,p.pallet, e.essences_id, e.name, e.code  
 		from pieces p left outer join essences e on p.essences_id=e.essences_id where p.barcode=? and p.pallets_id=?`, code, srcPalletID)
 	if err != nil {
 		return err
@@ -268,6 +275,7 @@ func (pieceDao PieceDao) TransferPieceByBarcode(code string, srcPalletID int64, 
 			&piece.Scanned.Length,
 			&piece.Scanned.Width,
 			&piece.Scanned.SheetCount,
+			&piece.Scanned.OriginalPallet,
 			&piece.Essence.ID,
 			&piece.Essence.Name,
 			&piece.Essence.Code)

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"log"
 	"fmt"
 	"strconv"
 )
@@ -38,6 +39,7 @@ func (scannedPiece ScannedPiece) NewFromScan(Scan string) (*ScannedPiece, error)
 	}
 
 	newScan.Code = Scan[2:8] + "-" + Scan[0:2]
+	log.Println("OriginalPallet: "+Scan[8:15])
 	newScan.OriginalPallet, err = strconv.ParseInt(Scan[8:15], 10, 64)
 	if err != nil {
 		return nil, err
