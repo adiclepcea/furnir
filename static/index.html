@@ -13,6 +13,7 @@
             td {
                 padding: 0;
                 margin: 0;
+                border-right: solid 1pt lightyellow;
             }
         </style>
     </head>
@@ -118,7 +119,7 @@
                             <td>{{item.scanned.length}}</td>
                             <td>{{item.scanned.width}}</td>
                             <td>{{item.scanned.sheet_count}}</td>
-                            <td>
+                            <td style="width:15pt">
                                 <button style="font-size:11px; float:right; padding: 0 0 0 0" 
                                     v-bind:name="item.barcode" class="btn btn-sm" v-on:click="transfer($event.target.name)">
                                     <span class="glyphicon glyphicon-forward"/>
@@ -137,7 +138,7 @@
                     <button style="font-size:11px;float:right;padding: 0 0 0 0" v-on:click="selectMe">Sel</button>
                     <button style="font-size: 11px; float: right;padding: 0 0 0 0" v-on:click="printMe"><span class="glyphicon glyphicon-print"></span></button>
                 </div>                        
-                <div class="col-sm-12" v-if="pallet!=null">
+                <div v-if="pallet!=null">
                     <table style="width:100%">
                         <tr style="background-color:#333333; color: white; font-weight: bold"><td>Tr</td><td>L</td><td>l</td><td>Foi</td></tr>
                         <tr v-for="item in items">

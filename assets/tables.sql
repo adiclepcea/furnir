@@ -1,3 +1,9 @@
+
+create database furnir;
+grant all privileges on furnir.* to furnir@'%' identified by 'Furnir123';
+
+use furnir;
+
 -- MySQL dump 10.16  Distrib 10.1.23-MariaDB, for debian-linux-gnueabihf (armv7l)
 --
 -- Host: localhost    Database: furnir
@@ -109,6 +115,7 @@ CREATE TABLE `pieces` (
   `length` int(11) DEFAULT NULL,
   `width` int(11) DEFAULT NULL,
   `sheets` int(11) DEFAULT NULL,
+  `pallet` varchar(50) NOT NULL, 
   PRIMARY KEY (`pieces_id`),
   KEY `idx_pallets_id` (`pallets_id`),
   KEY `essences_id` (`essences_id`),
