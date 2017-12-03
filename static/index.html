@@ -40,10 +40,65 @@
             <div id="pallet-transfer" class="col-xs-12" >
                 <pallet-transfer-wizard v-bind:steps="steps" ></pallet-transfer-wizard>
             </div>
-            <div id="manage" style="display:none">
-                Aici va fi administrarea
+            <div id="manage" style="display:none" class="col-xs-12">
+                <administration></administration>
             </div>
         </div>
+
+        <script type="text/x-template" id="administration-template">
+            <div class="col-sm-6 col-md-4">                
+                <div id="essences" class="panel panel-default ">
+                    <div class="panel-heading">
+                        <span>Esente<span>
+                        <button style="font-size:11px; float:right;padding: 0 0 0 0" v-on:click="printMe"><span class="glyphicon glyphicon-print"/></button>
+                    </div>                    
+                    <div class="panel-body">
+                        <div>
+                            <input type="text" placeholder="Nume" size="10" v-model="newessence.name"/>
+                            <input type="text" placeholder="Cod" size="2" v-model="newessence.code"/>
+                            <button class="btn btn-sm btn-success" v-on:click="addMe">Adauga</button>
+                        </div>
+                        <hr/>
+                        <table class="table table-striped">
+                            <thead>
+                                <td>Nume</td><td colspan="2">Cod</td>
+                            </thead>                     
+                            <tbody>
+                                <tr v-for="essence in essences">
+                                    <td >
+                                        <span v-if="essence.editmode"><input type="text" v-model="essence.name"/></span>
+                                        <span v-else>{{ essence.name }}</span>
+                                    </td>
+                                    <td >
+                                            <span v-if="essence.editmode"><input type="text" v-model="essence.code"/></span>
+                                            <span v-else>{{ essence.code }}</span>
+                                    </td>
+                                    <td style="width:80px">
+                                        <span v-if="essence.editmode">
+                                            <button 
+                                                class="btn btn-xs btn-success" 
+                                                v-on:click="saveMe(essence)">
+                                                    <span class="glyphicon glyphicon-ok"></span>
+                                            </button>
+                                        </span>
+                                        <span v-else>
+                                            <button 
+                                                class="btn btn-xs btn-warning" 
+                                                v-on:click="editMe(essence)">
+                                                    <span class="glyphicon glyphicon-pencil"></span>
+                                            </button>
+                                            <button class="btn btn-xs btn-danger" v-on:click="removeMe(essence)">
+                                                <span class="glyphicon glyphicon-remove"></span>
+                                            </button>                                        
+                                        </span>                                        
+                                    </td>
+                                </tr>
+                            </tbody>   
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </script>
         <script type="text/x-template" id="pallet-transfer-wizard-template">
             <div style="margin:0; padding:0">                
                 <div class="pane" id="header" style="text-align:center">                
@@ -154,6 +209,107 @@
 
         <script>
             var bus = new Vue();
+            /////////////////////////////////////
+            // Administrare
+            /////////////////////////////////////
+            Vue.component('administration', {
+                template: "#administration-template",
+                data: function(){
+                    return {
+                        essences: new Array(),
+                        newessence: {name:"", code:""}
+                    }
+                },
+                created: function(){
+                    this.essences = new Array();                    
+                    this.newessence = {name:"", code:""};
+                    this.populate();
+                },
+                methods: {
+                    printMe: function(){
+                        window.open("/essence?print=true","_blank");
+                    },  
+                    populate: function(){
+                        axios.get("/essence")
+                            .then(r => {
+                                console.log(r);
+                                this.essences = new Array();
+                                for(i=0;i<r.data.length;i++){
+                                    this.essences.push(r.data[i]);
+                                }     
+                                this.$forceUpdate();   
+                                //alert(r);
+                            })
+                            .catch(function(error){
+                                if(error.response &&
+                                    error.response.data &&
+                                    error.response.data.message){
+                                    alert(error.response.data.message)
+                                }else{
+                                    alert(error);
+                                }
+                            });
+                    },
+                    addMe: function(){               
+                        var me = this;         
+                        axios.post(
+                            "/essence",
+                            this.newessence
+                        ).then(function(response){                     
+                            me.populate();
+                            me.newessence.name = "";
+                            me.newessence.code = "";
+                        }).catch(function(e){
+                            me.err(e)
+                        });
+                    },
+                    removeMe: function(essence){
+                        if(!confirm("Sigur doriti stergerea esentei selectate? (" + essence.name + ")")){
+                            return;
+                        }
+                        var me = this;         
+
+                        axios.delete("/essence?id="+essence.id)
+                            .then(function(response){
+                                me.populate();
+                            })
+                            .catch(function(e){
+                                me.err(e)
+                            });
+                    },
+                    editMe: function(essence){
+                        essence.editmode = true;
+                        this.$forceUpdate(); 
+                    },
+                    saveMe: function(essence) {
+                        var me = this;         
+                        axios.put("/essence", essence)
+                        .then(function(response){                     
+                            me.populate();                            
+                        }).catch(function(e){
+                            me.err(e)
+                        });
+                    },
+                    err: function(error){
+                            if(error.response &&
+                                error.response.data &&
+                                error.response.data.message){
+                                alert(error.response.data.message)
+                            }else{
+                                alert(error);
+                            }
+                        }
+                }
+            });
+
+            new Vue({
+                el: '#manage',
+                data: {}
+            });
+
+            /////////////////////////////////////
+            //Mutare
+            /////////////////////////////////////
             Vue.component('palet-sursa',{
                 template: "#source-pallet-template",
                 props: ['pallet','scanneditem'],
@@ -638,6 +794,7 @@
                 document.getElementById("pallet-transfer").style.display="none";
                 document.getElementById("manage").style.display="block";
                 document.getElementById("mnuAdministrare").classList.add("active");
+
             }
 
             function showMutareFurnir(){
