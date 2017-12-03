@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 
@@ -94,7 +95,7 @@ func operationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		service.PrintOperations(w,r)
+		service.PrintOperations(w, r)
 		break
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -103,6 +104,39 @@ func operationsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
+	database := flag.String("database", "furnir", "The database to use")
+	dbUser := flag.String("dbuser", "furnir", "The database user")
+	dbPassword := flag.String("dbpass", "Furnir123", "The database password")
+	dbPort := flag.Int("dbport", 3306, "The port of the database")
+	dbServer := flag.String("dbserver", "localhost", "The database server")
+	port := flag.Int("port", 5000, "The port to start the server on")
+
+	flag.Parse()
+
+	if database != nil {
+		dao.Database = *database
+	}
+	if dbUser != nil {
+		dao.DbUser = *dbUser
+	}
+	if dbPassword != nil {
+		dao.DbPassword = *dbPassword
+	}
+	if dbPort != nil {
+		dao.DbPort = *dbPort
+	}
+	if dbServer != nil {
+		dao.DbServer = *dbServer
+	}
+
+	defPort := 5000
+	if port != nil {
+		defPort = *port
+	}
+
+	fmt.Printf("port: %d\r\n", *port)
+
 	fs := http.FileServer(http.Dir("static"))
 	http.HandleFunc("/", http.StripPrefix("/", fs).ServeHTTP)
 	essenceService = service.NewEssenceService(dao.EssenceDao{})
@@ -111,7 +145,6 @@ func main() {
 	http.HandleFunc("/piece", pieceHandler)
 	http.HandleFunc("/transfer", transferHandler)
 	http.HandleFunc("/operations", operationsHandler)
-	fmt.Println("Starting furnir server on port 5000 ...")
-	http.ListenAndServe(":5000", nil)
-	fmt.Println("llll")
+	fmt.Printf("Starting furnir server on port %d ...\r\n", defPort)
+	http.ListenAndServe(fmt.Sprintf(":%d", defPort), nil)
 }
