@@ -176,7 +176,7 @@
                             <td>{{item.scanned.sheet_count}}</td>
                             <td style="width:15pt">
                                 <button style="font-size:11px; float:right; padding: 0 0 0 0" 
-                                    v-bind:name="item.barcode" class="btn btn-sm" v-on:click="transfer($event.target.name)">
+                                    v-bind:name="item.barcode" class="btn btn-sm" v-on:click="transfer(item.barcode)">
                                     <span class="glyphicon glyphicon-forward"/>
                                 </button>
                             </td>
